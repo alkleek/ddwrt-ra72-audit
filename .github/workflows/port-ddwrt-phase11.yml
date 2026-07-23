@@ -1,4 +1,4 @@
-name: Fix includes and compile review-only DD-WRT RA72 Device Tree
+name: Fix includes and compile review-only DD-WRT RA72 Device Tree (fixed)
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   compile-dts:
-    name: Phase 11 RA72 DTS include fix compile
+    name: Phase 11 RA72 DTS symlink-safe include compile
     runs-on: ubuntu-24.04
     timeout-minutes: 45
 
