@@ -121,3 +121,19 @@ Run:
 Its artifact is named `ddwrt-ra72-phase9-source-port-draft`. It contains source
 text and reports only. It does not compile a kernel, create an initramfs, build
 firmware, or authorize booting/flashing.
+
+## Phase 10
+
+Phase 10 adapts the three generic Linux Device Tree binding headers identified
+in Phase 9 and attempts to preprocess, compile, and decompile the RA72 DTS
+inside a temporary DD-WRT IPQ5018 compatibility tree.
+
+Run:
+
+`Compile review-only DD-WRT RA72 Device Tree draft`
+
+Its artifact is named `ddwrt-ra72-phase10-dts-compile-audit`. Review
+`REPORT-PHASE10.txt`, `review/compile-status.tsv`, the compiler logs, binding
+provenance, and compiled-tree verification. A generated DTB is a compiler test
+object only. It is not firmware and must never be booted, flashed, installed,
+TFTP-loaded, or written to a router.
