@@ -1,0 +1,13 @@
+Product: Xiaomi Mi AIoT AX6000
+Model: RA72
+SoC: Qualcomm IPQ5018
+Architecture: ARM64
+Board: IPQ5018 MP03.1
+RAM: 512 MiB
+NAND: 128 MiB SPI-NAND
+LAN switch: Qualcomm QCA8337
+2.5GbE PHY: Qualcomm QCA8081
+
+This is not:
+- Xiaomi Mi Router AX6000 based on IPQ8072A
+- Redmi AX6000 based on MediaTek hardware
