@@ -48,3 +48,15 @@ to locate the closest Qualcomm ARM64 build template for a new RA72 target. Run:
 
 Its artifact is named `ddwrt-ra72-phase3-audit`. It contains reports and public
 source excerpts only; it is not firmware.
+
+## Phase 4
+
+Phase 4 inspects the concrete IPQ5018 templates found in phase 3, especially
+the Linksys MR5500 and MX5500. Run:
+
+`Audit DD-WRT IPQ5018 templates for RA72`
+
+Its artifact is named `ddwrt-ra72-phase4-audit`. It collects the relevant
+public source excerpts needed to compare image construction, board detection,
+flash layout, networking, Wi-Fi calibration, and MAC handling with RA72. It
+does not build firmware.
