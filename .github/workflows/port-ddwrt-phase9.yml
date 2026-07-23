@@ -1,0 +1,45 @@
+name: Generate first DD-WRT RA72 source-port draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_ref:
+        description: Working OpenWrt RA72 source baseline
+        required: true
+        default: openwrt-25.12
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  draft:
+    name: Phase 9 RA72 source-port draft
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out port project
+        uses: actions/checkout@v4
+
+      - name: Install source-audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends subversion
+
+      - name: Generate review-only RA72 port draft
+        env:
+          OPENWRT_REPOSITORY: https://github.com/openwrt/openwrt.git
+          OPENWRT_REF: ${{ inputs.openwrt_ref }}
+          DDWRT_HTTPS_URL: https://svn.dd-wrt.com/DD-WRT
+          DDWRT_SVN_URL: svn://svn.dd-wrt.com/DD-WRT
+        run: bash scripts/port-phase9.sh
+
+      - name: Upload phase 9 source draft
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase9-source-port-draft
+          path: phase9-output/
+          if-no-files-found: error
+          retention-days: 30
