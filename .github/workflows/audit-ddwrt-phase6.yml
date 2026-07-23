@@ -1,0 +1,45 @@
+name: Audit RA72 NAND and A-B boot safety for DD-WRT
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_ref:
+        description: OpenWrt ref containing the working RA72 definition
+        required: true
+        default: openwrt-25.12
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Phase 6 NAND and boot-layout audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out audit project
+        uses: actions/checkout@v4
+
+      - name: Install audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends git subversion
+
+      - name: Audit RA72 NAND and A-B boot handling
+        env:
+          DDWRT_HTTPS_URL: https://svn.dd-wrt.com/DD-WRT
+          DDWRT_SVN_URL: svn://svn.dd-wrt.com/DD-WRT
+          OPENWRT_REPOSITORY: https://github.com/openwrt/openwrt.git
+          OPENWRT_REF: ${{ inputs.openwrt_ref }}
+        run: bash scripts/audit-phase6.sh
+
+      - name: Upload phase 6 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase6-nand-boot-audit
+          path: phase6-output/
+          if-no-files-found: error
+          retention-days: 30
