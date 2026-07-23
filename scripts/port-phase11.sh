@@ -79,6 +79,25 @@ bindings=(
   "dt-bindings/leds/common.h"
 )
 
+# In both Linux and some SVN exports, this dt-bindings path is a relative
+# symlink to include/uapi/linux/input-event-codes.h.  A plain HTTP/SVN export
+# can turn the symlink into a one-line file containing only
+# "../../uapi/linux/input-event-codes.h", which cpp accepts but dtc then tries
+# to parse as DTS.  Fetch the real target for this one binding.
+fetch_binding() {
+  local binding="$1"
+  local destination="$2"
+  local url="$LINUX_BINDINGS_BASE/$binding"
+
+  if [[ "$binding" == "dt-bindings/input/linux-event-codes.h" ]]; then
+    url="$LINUX_BINDINGS_BASE/uapi/linux/input-event-codes.h"
+  fi
+
+  rm -f "$destination"
+  curl --fail --location --silent --show-error \
+    "$url" --output "$destination"
+}
+
 : > "$review/binding-provenance.tsv"
 printf 'binding\tsource\tsha256\n' >> "$review/binding-provenance.tsv"
 
@@ -86,12 +105,14 @@ for binding in "${bindings[@]}"; do
   destination="$stage/include/$binding"
   mkdir -p "$(dirname "$destination")"
 
-  if [[ -s "$ddwrt_tree/include/$binding" ]]; then
+  if [[ "$binding" == "dt-bindings/input/linux-event-codes.h" ]]; then
+    fetch_binding "$binding" "$destination"
+    provenance="upstream Linux v6.12 resolved symlink target"
+  elif [[ -s "$ddwrt_tree/include/$binding" ]]; then
     cp "$ddwrt_tree/include/$binding" "$destination"
     provenance="DD-WRT public linux-6.12-nss"
   else
-    curl --fail --location --silent --show-error \
-      "$LINUX_BINDINGS_BASE/$binding" --output "$destination"
+    fetch_binding "$binding" "$destination"
     provenance="upstream Linux v6.12 compatibility overlay"
   fi
 
@@ -106,15 +127,19 @@ cp -a "$ddwrt_tree/include/dt-bindings/." \
 # Restore the explicitly reviewed compatibility headers after the
 # broad DD-WRT binding copy, so provenance remains deterministic.
 for binding in "${bindings[@]}"; do
-  if grep -F "$binding" "$review/binding-provenance.tsv" \
-      | grep -q 'upstream Linux'; then
+  if [[ "$binding" == "dt-bindings/input/linux-event-codes.h" ]] \
+      || grep -F "$binding" "$review/binding-provenance.tsv" \
+         | grep -q 'upstream Linux'; then
     # The broad DD-WRT copy may recreate this path as a dangling relative
     # symlink. Remove it before writing the reviewed upstream regular file.
-    rm -f "$stage/include/$binding"
-    curl --fail --location --silent --show-error \
-      "$LINUX_BINDINGS_BASE/$binding" --output "$stage/include/$binding"
+    fetch_binding "$binding" "$stage/include/$binding"
   fi
 done
+
+# Fail with a clear infrastructure diagnostic if the symlink target was not
+# materialized as a real C header.
+event_codes="$stage/include/dt-bindings/input/linux-event-codes.h"
+grep -q '^#define[[:space:]]\+KEY_RESTART[[:space:]]' "$event_codes"
 
 candidate_dts="$stage/qcom/$candidate_name"
 preprocessed="$review/ra72-ddwrt-compat.preprocessed.dts"

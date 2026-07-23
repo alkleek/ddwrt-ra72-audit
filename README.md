@@ -143,6 +143,10 @@ Phase 11 fixes the precise missing include discovered by Phase 10:
 `dt-bindings/input/linux-event-codes.h`. It then repeats the review-only
 preprocessor, compiler, decompiler, and RA72 identity checks.
 
+Version 0.11.2 also materializes the real Linux
+`include/uapi/linux/input-event-codes.h` target. This avoids passing the
+one-line text of a relative symlink to `dtc`.
+
 Run **Fix includes and compile review-only DD-WRT RA72 Device Tree**. Its
 artifact is named `ddwrt-ra72-phase11-dts-compile-fix`. This remains a
 source/compiler audit; it produces no firmware that is safe to boot or flash.
