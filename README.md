@@ -137,3 +137,12 @@ Its artifact is named `ddwrt-ra72-phase10-dts-compile-audit`. Review
 provenance, and compiled-tree verification. A generated DTB is a compiler test
 object only. It is not firmware and must never be booted, flashed, installed,
 TFTP-loaded, or written to a router.
+## Phase 11
+
+Phase 11 fixes the precise missing include discovered by Phase 10:
+`dt-bindings/input/linux-event-codes.h`. It then repeats the review-only
+preprocessor, compiler, decompiler, and RA72 identity checks.
+
+Run **Fix includes and compile review-only DD-WRT RA72 Device Tree**. Its
+artifact is named `ddwrt-ra72-phase11-dts-compile-fix`. This remains a
+source/compiler audit; it produces no firmware that is safe to boot or flash.
