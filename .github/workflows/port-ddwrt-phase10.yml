@@ -1,0 +1,47 @@
+name: Compile review-only DD-WRT RA72 Device Tree draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_ref:
+        description: Working OpenWrt RA72 source baseline
+        required: true
+        default: openwrt-25.12
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  compile-dts:
+    name: Phase 10 RA72 DTS compatibility compile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out port project
+        uses: actions/checkout@v4
+
+      - name: Install Device Tree audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            build-essential curl device-tree-compiler git subversion
+
+      - name: Adapt includes and compile review-only RA72 DTS
+        env:
+          OPENWRT_REPOSITORY: https://github.com/openwrt/openwrt.git
+          OPENWRT_REF: ${{ inputs.openwrt_ref }}
+          DDWRT_HTTPS_URL: https://svn.dd-wrt.com/DD-WRT
+          DDWRT_SVN_URL: svn://svn.dd-wrt.com/DD-WRT
+          LINUX_BINDINGS_BASE: https://raw.githubusercontent.com/torvalds/linux/v6.12/include
+        run: bash scripts/port-phase10.sh
+
+      - name: Upload phase 10 compile report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase10-dts-compile-audit
+          path: phase10-output/
+          if-no-files-found: error
+          retention-days: 30
