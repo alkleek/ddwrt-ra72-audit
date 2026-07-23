@@ -27,25 +27,48 @@ mapfile -t ra72_dts < <(
     | sort
 )
 
-if (( ${#ra72_dts[@]} == 0 )); then
-  echo "RESULT: the selected OpenWrt ref does not contain the RA72 device tree."
-  exit 1
-fi
-
-printf '%s\n' "${ra72_dts[@]#"$openwrt_tree/"}" | tee "$out/openwrt-ra72-dts-paths.txt"
-
 image_file="$openwrt_tree/target/linux/qualcommax/image/ipq50xx.mk"
 test -f "$image_file"
 device_block="$out/openwrt-ra72-device-definition.txt"
 sed -n '/define Device\/xiaomi_ax6000/,/endef/p' "$image_file" > "$device_block"
+test -s "$device_block"
 
 grep -q 'SOC := ipq5018' "$device_block"
 grep -q 'DEVICE_DTS_CONFIG := config@mp03\.1' "$device_block"
 grep -q 'NAND_SIZE := 128m' "$device_block"
 
+device_dts_name="$(
+  sed -n 's/^[[:space:]]*DEVICE_DTS[[:space:]]*:=[[:space:]]*//p' "$device_block" \
+    | head -n 1
+)"
+if [[ -z "$device_dts_name" ]]; then
+  device_dts_name="ipq5018-ax6000"
+fi
+
+mapfile -t ra72_patch_sources < <(
+  grep -RIl --exclude='*.mk' \
+    -e "$device_dts_name" \
+    -e 'xiaomi,ax6000' \
+    "$openwrt_tree/target/linux/qualcommax" 2>/dev/null \
+    | sort -u
+)
+
+if (( ${#ra72_dts[@]} == 0 && ${#ra72_patch_sources[@]} == 0 )); then
+  echo "RESULT: the selected OpenWrt ref contains the RA72 image profile but its device-tree source could not be located."
+  exit 1
+fi
+
+{
+  printf '%s\n' "${ra72_dts[@]#"$openwrt_tree/"}"
+  printf '%s\n' "${ra72_patch_sources[@]#"$openwrt_tree/"}"
+} | sed '/^$/d' | sort -u | tee "$out/openwrt-ra72-source-paths.txt"
+
 mkdir -p "$out/openwrt-reference"
-for path in "${ra72_dts[@]}" "$image_file"; do
-  cp "$path" "$out/openwrt-reference/$(basename "$path")"
+for path in "${ra72_dts[@]}" "${ra72_patch_sources[@]}" "$image_file"; do
+  [[ -f "$path" ]] || continue
+  relative="${path#"$openwrt_tree/"}"
+  safe_name="${relative//\//__}"
+  cp "$path" "$out/openwrt-reference/$safe_name"
 done
 
 echo
@@ -120,7 +143,9 @@ ddwrt_lines=$(wc -l < "$out/ddwrt-integration-lines.txt")
 
 echo
 echo "=== Automated classification ==="
-echo "Working OpenWrt RA72 DTS files: ${#ra72_dts[@]}"
+echo "Working OpenWrt RA72 standalone DTS files: ${#ra72_dts[@]}"
+echo "OpenWrt RA72 patch/source references: ${#ra72_patch_sources[@]}"
+echo "OpenWrt device-tree name: $device_dts_name"
 echo "OpenWrt integration evidence lines: $openwrt_lines"
 echo "DD-WRT reference integration evidence lines: $ddwrt_lines"
 echo "Verified OpenWrt identity: IPQ5018 / MP03.1 / 128 MiB NAND"
