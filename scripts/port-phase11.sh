@@ -108,6 +108,9 @@ cp -a "$ddwrt_tree/include/dt-bindings/." \
 for binding in "${bindings[@]}"; do
   if grep -F "$binding" "$review/binding-provenance.tsv" \
       | grep -q 'upstream Linux'; then
+    # The broad DD-WRT copy may recreate this path as a dangling relative
+    # symlink. Remove it before writing the reviewed upstream regular file.
+    rm -f "$stage/include/$binding"
     curl --fail --location --silent --show-error \
       "$LINUX_BINDINGS_BASE/$binding" --output "$stage/include/$binding"
   fi
