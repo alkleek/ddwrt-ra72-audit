@@ -1,0 +1,38 @@
+name: Validate running RA72 DTB contract for DD-WRT port
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_ref:
+        description: Verified OpenWrt ref for the working RA72 baseline
+        required: true
+        default: openwrt-25.12
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Phase 8 runtime-DTB contract audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out audit project
+        uses: actions/checkout@v4
+
+      - name: Validate sanitized RA72 hardware contract
+        env:
+          OPENWRT_REPOSITORY: https://github.com/openwrt/openwrt.git
+          OPENWRT_REF: ${{ inputs.openwrt_ref }}
+        run: bash scripts/audit-phase8.sh
+
+      - name: Upload phase 8 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase8-runtime-dtb-contract
+          path: phase8-output/
+          if-no-files-found: error
+          retention-days: 30
