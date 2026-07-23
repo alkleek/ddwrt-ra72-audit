@@ -1,0 +1,37 @@
+name: Audit DD-WRT build system for a new RA72 target
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Phase 3 build-system audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out audit project
+        uses: actions/checkout@v4
+
+      - name: Install audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends subversion
+
+      - name: Inspect DD-WRT build system
+        env:
+          DDWRT_HTTPS_URL: https://svn.dd-wrt.com/DD-WRT
+          DDWRT_SVN_URL: svn://svn.dd-wrt.com/DD-WRT
+        run: bash scripts/audit-phase3.sh
+
+      - name: Upload phase 3 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase3-audit
+          path: phase3-output/
+          if-no-files-found: error
+          retention-days: 30
