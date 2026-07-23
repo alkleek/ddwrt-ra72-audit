@@ -92,3 +92,17 @@ lists the exact read-only UART bootloader information still required. Run:
 
 Its artifact is named `ddwrt-ra72-phase7-boot-contract`. It does not build
 firmware and must not be flashed.
+
+## Phase 8
+
+Phase 8 validates a sanitized hardware contract derived from the live Device
+Tree of the working OpenWrt installation. The raw DTB is not stored because it
+may contain device-specific values. Run:
+
+`Validate running RA72 DTB contract for DD-WRT port`
+
+Its artifact is named `ddwrt-ra72-phase8-runtime-dtb-contract`. It contains the
+verified identity, memory reservations, Ethernet, Wi-Fi calibration, NAND and
+GPIO contract plus a non-flashable DD-WRT port checklist. It builds no firmware
+and makes no changes to the router. The RAM-only prototype remains blocked
+until a bootloader-safe load address and image container are verified.
