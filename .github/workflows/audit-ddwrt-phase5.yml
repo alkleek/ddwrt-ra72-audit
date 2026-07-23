@@ -1,0 +1,45 @@
+name: Compare DD-WRT templates with Xiaomi Mi AIoT AX6000 RA72
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_ref:
+        description: OpenWrt branch, tag, or commit containing the working RA72 definition
+        required: true
+        default: openwrt-25.12
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Phase 5 RA72 hardware integration map
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out audit project
+        uses: actions/checkout@v4
+
+      - name: Install audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends git subversion device-tree-compiler
+
+      - name: Compare working RA72 definition with DD-WRT IPQ5018 templates
+        env:
+          DDWRT_HTTPS_URL: https://svn.dd-wrt.com/DD-WRT
+          DDWRT_SVN_URL: svn://svn.dd-wrt.com/DD-WRT
+          OPENWRT_REPOSITORY: https://github.com/openwrt/openwrt.git
+          OPENWRT_REF: ${{ inputs.openwrt_ref }}
+        run: bash scripts/audit-phase5.sh
+
+      - name: Upload phase 5 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase5-port-map
+          path: phase5-output/
+          if-no-files-found: error
+          retention-days: 30
