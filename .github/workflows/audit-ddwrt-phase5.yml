@@ -1,4 +1,4 @@
-name: Compare DD-WRT templates with Xiaomi Mi AIoT AX6000 RA72
+name: Compare DD-WRT templates with Xiaomi Mi AIoT AX6000 RA72 (fixed)
 
 on:
   workflow_dispatch:
