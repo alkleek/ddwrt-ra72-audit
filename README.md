@@ -60,3 +60,15 @@ Its artifact is named `ddwrt-ra72-phase4-audit`. It collects the relevant
 public source excerpts needed to compare image construction, board detection,
 flash layout, networking, Wi-Fi calibration, and MAC handling with RA72. It
 does not build firmware.
+
+## Phase 5
+
+Phase 5 compares the working OpenWrt definition for the exact Xiaomi Mi AIoT
+AX6000 RA72 with the DD-WRT IPQ5018 reference devices. Run:
+
+`Compare DD-WRT templates with Xiaomi Mi AIoT AX6000 RA72`
+
+Keep the default OpenWrt reference unless deliberately auditing another known
+working revision. Its artifact is named `ddwrt-ra72-phase5-port-map`. It maps
+device identity, DTS, NAND/A-B layout, Ethernet, Wi-Fi calibration, MAC
+handling, LEDs, and buttons. It remains audit-only and creates no firmware.
