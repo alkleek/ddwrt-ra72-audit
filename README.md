@@ -38,3 +38,13 @@ build/profile foundation rather than kernel drivers alone. Run:
 
 Its artifact is named `ddwrt-ra72-phase2-audit`. It is text-only and is not
 firmware.
+
+## Phase 3
+
+Phase 3 inspects DD-WRT configuration, rules, and device initialization files
+to locate the closest Qualcomm ARM64 build template for a new RA72 target. Run:
+
+`Audit DD-WRT build system for a new RA72 target`
+
+Its artifact is named `ddwrt-ra72-phase3-audit`. It contains reports and public
+source excerpts only; it is not firmware.
