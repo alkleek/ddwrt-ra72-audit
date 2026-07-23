@@ -82,3 +82,13 @@ constraints, and the closest DD-WRT image/build references. Run:
 
 Its artifact is named `ddwrt-ra72-phase6-nand-boot-audit`. It does not build
 firmware and must not be flashed.
+
+## Phase 7
+
+Phase 7 defines the safety contract for a future RAM-only boot prototype and
+lists the exact read-only UART bootloader information still required. Run:
+
+`Define safe boot-only DD-WRT prototype contract for RA72`
+
+Its artifact is named `ddwrt-ra72-phase7-boot-contract`. It does not build
+firmware and must not be flashed.
