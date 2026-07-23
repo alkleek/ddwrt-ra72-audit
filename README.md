@@ -106,3 +106,18 @@ verified identity, memory reservations, Ethernet, Wi-Fi calibration, NAND and
 GPIO contract plus a non-flashable DD-WRT port checklist. It builds no firmware
 and makes no changes to the router. The RAM-only prototype remains blocked
 until a bootloader-safe load address and image container are verified.
+
+## Phase 9
+
+Phase 9 creates the first reviewable source-port draft for the exact Xiaomi Mi
+AIoT AX6000 RA72. It stages the working OpenWrt RA72 DTS against DD-WRT's
+IPQ5018 kernel references, verifies the essential hardware nodes, reports
+incompatible include dependencies, and emits a draft source patch.
+
+Run:
+
+`Generate first DD-WRT RA72 source-port draft`
+
+Its artifact is named `ddwrt-ra72-phase9-source-port-draft`. It contains source
+text and reports only. It does not compile a kernel, create an initramfs, build
+firmware, or authorize booting/flashing.
