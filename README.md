@@ -72,3 +72,13 @@ Keep the default OpenWrt reference unless deliberately auditing another known
 working revision. Its artifact is named `ddwrt-ra72-phase5-port-map`. It maps
 device identity, DTS, NAND/A-B layout, Ethernet, Wi-Fi calibration, MAC
 handling, LEDs, and buttons. It remains audit-only and creates no firmware.
+
+## Phase 6
+
+Phase 6 audits the exact RA72 NAND layout, Xiaomi A/B boot flags, image-size
+constraints, and the closest DD-WRT image/build references. Run:
+
+`Audit RA72 NAND and A-B boot safety for DD-WRT`
+
+Its artifact is named `ddwrt-ra72-phase6-nand-boot-audit`. It does not build
+firmware and must not be flashed.
