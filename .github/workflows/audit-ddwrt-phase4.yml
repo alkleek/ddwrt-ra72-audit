@@ -1,0 +1,37 @@
+name: Audit DD-WRT IPQ5018 templates for RA72
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Phase 4 IPQ5018 template audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out audit project
+        uses: actions/checkout@v4
+
+      - name: Install audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends subversion
+
+      - name: Inspect IPQ5018 reference targets
+        env:
+          DDWRT_HTTPS_URL: https://svn.dd-wrt.com/DD-WRT
+          DDWRT_SVN_URL: svn://svn.dd-wrt.com/DD-WRT
+        run: bash scripts/audit-phase4.sh
+
+      - name: Upload phase 4 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase4-audit
+          path: phase4-output/
+          if-no-files-found: error
+          retention-days: 30
