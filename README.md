@@ -28,3 +28,13 @@ It is not for the Xiaomi Mi Router AX6000 or Redmi AX6000.
 5. Download the artifact named `ddwrt-ra72-source-audit`.
 
 Do not perform any operation on a router during this phase.
+
+## Phase 2
+
+Phase 2 checks whether the public tree contains a real DD-WRT IPQ5018
+build/profile foundation rather than kernel drivers alone. Run:
+
+`Audit DD-WRT IPQ5018 build foundation for RA72`
+
+Its artifact is named `ddwrt-ra72-phase2-audit`. It is text-only and is not
+firmware.
