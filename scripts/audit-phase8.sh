@@ -63,7 +63,7 @@ if grep -q '^FAIL' "$out/RA72-VERIFICATION-MATRIX.tsv"; then
 fi
 
 cat > "$out/DDWRT-RA72-PORT-SKELETON.md" <<'EOF'
-# DD-WRT RA72 port skeleton — non-flashable
+# DD-WRT RA72 port skeleton - non-flashable
 
 This is an implementation checklist, not source code or firmware.
 

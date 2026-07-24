@@ -1,58 +1,44 @@
 # DD-WRT private port audit - Xiaomi Mi AIoT AX6000 RA72
 
-## Phase 13 (fixed)
+## Phase 14
 
-This phase resolves the two missing Q6 reserved-memory labels discovered by
-Phase 12:
-
-- `q6_region`
-- `q6_etr_region`
-
-It searches the selected, verified OpenWrt source for the exact node
-definitions, records their source paths and SHA-256 hashes, and injects those
-exact definitions into a temporary DD-WRT native `ipq5018.dtsi`.
-
-The fixed workflow detects the available public DD-WRT kernel tree containing
-the native `ipq5018.dtsi`. It no longer assumes the obsolete `linux-6.1` path.
-
-No address or size is guessed. If either definition cannot be found, the job
-stops safely and reports `BLOCKED`.
-
-## Exact device
-
-Only:
+Phase 14 audits the platform gap between the public DD-WRT source inventory and
+the verified OpenWrt implementation for this exact device:
 
 - Product: **Xiaomi Mi AIoT AX6000**
 - Model: **RA72**
 - SoC: **Qualcomm IPQ5018**
 - Board: **MP03.1**
 
-It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
+It is **not** for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Run
+The audit inventories the IPQ5018 platform pieces needed for a real DD-WRT port
+and creates an ordered source-import plan. It does not treat isolated driver
+matches as proof of device support.
 
-In GitHub, open **Actions** and select:
+## Run Phase 14
 
-**Phase 13 (fixed): Resolve Q6 reserved-memory labels and compile review-only DD-WRT RA72 Device Tree**
+In GitHub:
 
-Press **Run workflow** and keep the default OpenWrt reference unless a different
-reviewed reference is intentionally required.
+1. Open **Actions**.
+2. Select **Phase 14: Audit IPQ5018 platform gap and source-import plan for RA72**.
+3. Select **Run workflow**.
+4. Keep `openwrt-25.12` unless intentionally auditing another reviewed ref.
+5. Download the artifact named `ddwrt-ra72-phase14-platform-gap`.
 
-Download the artifact:
+Important output:
 
-`ddwrt-ra72-phase13-fixed-q6-dts-compile`
-
-The important files are:
-
-- `REPORT-PHASE13.txt`
-- `review/phase13-status.txt`
-- `review/ddwrt-kernel-path.txt`
-- `review/q6-node-provenance.tsv`
-- `review/q6-reserved-memory-nodes.dtsi`
-- `review/compile-status.txt`
-- `review/dtc-compile.log`
+- `REPORT-PHASE14.txt`
+- `review/phase14-status.txt`
+- `review/missing-platform-components.txt`
+- `review/source-import-plan.txt`
+- `review/openwrt-ipq5018-components.txt`
+- `review/ddwrt-ipq5018-matches.txt`
 
 ## Safety
 
-Phase 13 is a compiler audit only. It does not build DD-WRT firmware and does
-not modify a router. Nothing in the artifact is flashable.
+Phase 14 is analysis-only. It builds no firmware, creates no boot image, does
+not access the router, and produces nothing flashable.
+
+Previous audit workflows remain in the repository for traceability. Each new
+stage uses its own phase number; Phase 14 does not replace or reuse Phase 11.
