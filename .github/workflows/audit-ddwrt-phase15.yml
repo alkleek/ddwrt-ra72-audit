@@ -1,0 +1,43 @@
+name: "Phase 15: Audit DD-WRT kernel baseline and ARM64 DTS foundation for RA72"
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_ref:
+        description: "Verified OpenWrt reference used only for comparison"
+        required: true
+        default: "openwrt-25.12"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Phase 15 kernel baseline audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out audit project
+        uses: actions/checkout@v4
+
+      - name: Install audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            ca-certificates git python3 ripgrep subversion
+
+      - name: Audit kernel baseline and ARM64 DTS foundation
+        env:
+          OPENWRT_REF: ${{ inputs.openwrt_ref }}
+        run: bash scripts/audit-phase15.sh
+
+      - name: Upload Phase 15 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase15-kernel-baseline
+          path: phase15-output/
+          if-no-files-found: error
+          retention-days: 14
