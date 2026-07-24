@@ -1,50 +1,44 @@
-# DD-WRT RA72 Phase 17 — IPQ5018 foundation classification
+# DD-WRT source audit for Xiaomi Mi AIoT AX6000 RA72
 
-This project audits public DD-WRT source for the **Xiaomi Mi AIoT AX6000,
-model RA72** only.
+This private project investigates whether the public DD-WRT source tree has a
+usable foundation for a future port to the exact Xiaomi **Mi AIoT AX6000**,
+model **RA72**, based on Qualcomm **IPQ5018 / MP03.1**.
 
-- SoC: Qualcomm IPQ5018
-- Board: MP03.1
-- Not the Xiaomi Mi Router AX6000 (IPQ8072A)
-- Not the Redmi AX6000
+It is not for the Xiaomi Mi Router AX6000 or Redmi AX6000.
 
-## Result carried forward from Phase 16
+## Phase 18
 
-Phase 16 confirmed that the public DD-WRT tree is reachable through:
+Phase 18 corrects false positives in the Phase 17 source classification.
+Broad substring searches can treat unrelated names such as `DRA72`, `cora72`,
+or `jump03` as device evidence. Phase 18 uses strict path-token matching and
+separates:
 
-`svn://svn.dd-wrt.com/DD-WRT`
+- exact RA72, Mi AIoT AX6000, and MP03.1 identity signals;
+- identity signals located in build/profile paths;
+- generic IPQ5018/IPQ50xx components;
+- rejected substring false positives.
 
-It found 123 IPQ5018/IPQ50xx/RA72-related path signals. That count did **not**
-prove that DD-WRT contains a buildable RA72 target.
+## Run Phase 18
 
-## What Phase 17 does
-
-Phase 17 classifies those source signals into exact device, build/profile,
-kernel/Device Tree, and driver candidate groups. It generates a text report so
-we can decide whether a genuine DD-WRT platform foundation exists.
-
-This is a source audit only:
-
-- no firmware is built;
-- no router is contacted;
-- no flash image is created;
-- nothing in the artifact is safe or intended to flash.
-
-## Run Phase 17
-
-1. Upload this update over the files in the existing GitHub repository.
+1. Upload this update to the existing private GitHub repository.
 2. Open **Actions**.
 3. Select:
-   **Phase 17: Classify DD-WRT IPQ5018 build foundation for Xiaomi Mi AIoT AX6000 RA72**
+   **Phase 18: Strictly classify DD-WRT support for Xiaomi Mi AIoT AX6000 RA72**
 4. Select **Run workflow**.
-5. Keep the default source URL:
-   `svn://svn.dd-wrt.com/DD-WRT`
-6. When it finishes, download:
-   `ddwrt-ra72-phase17-ipq5018-foundation-classification`
-7. Send these two files for analysis:
-   - `REPORT-PHASE17.txt`
-   - `review/phase17-status.txt`
+5. Keep the default source URL and select the green **Run workflow** button.
+6. When the run succeeds, download:
+   `ddwrt-ra72-phase18-strict-classification`
+7. Extract it and review:
+   - `REPORT-PHASE18.txt`
+   - `review/phase18-status.txt`
+   - `review/phase18-counts.txt`
 
-Older workflows and scripts remain in the repository as an audit history. Run
-only the workflow whose title starts with **Phase 17**.
+## Safety
 
+Phase 18:
+
+- does not build DD-WRT firmware;
+- does not produce a bootable or flashable image;
+- does not connect to the router;
+- does not use SSH or UART;
+- does not write NAND or change boot variables.
