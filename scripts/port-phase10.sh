@@ -17,9 +17,9 @@ echo "SoC/board: Qualcomm IPQ5018 / MP03.1"
 echo "SAFETY: compiler audit only; no firmware is built and nothing is flashable."
 echo
 
-contract="device/RA72-DTS-COMPILE-CONTRACT.md"
+contract="device/RA72-PHASE10-DTS-COMPILE-CONTRACT.md"
 test -s "$contract"
-cp "$contract" "$out/RA72-DTS-COMPILE-CONTRACT.md"
+cp "$contract" "$out/RA72-PHASE10-DTS-COMPILE-CONTRACT.md"
 
 cat > "$out/DO-NOT-BOOT-OR-FLASH.txt" <<'EOF'
 PHASE 10 COMPILER TEST OUTPUT ONLY

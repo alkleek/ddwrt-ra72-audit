@@ -137,7 +137,7 @@ Its artifact is named `ddwrt-ra72-phase10-dts-compile-audit`. Review
 provenance, and compiled-tree verification. A generated DTB is a compiler test
 object only. It is not firmware and must never be booted, flashed, installed,
 TFTP-loaded, or written to a router.
-## Phase 11
+## Historical Phase 11 findings
 
 Phase 11 fixes the precise missing include discovered by Phase 10:
 `dt-bindings/input/linux-event-codes.h`. It then repeats the review-only
@@ -153,6 +153,20 @@ DD-WRT's public IPQ5018 tree has no `ge_phy` label. The removal is recorded in
 `review/source-adaptations.txt`; it is not a claim that the Ethernet PHY is
 supported or operational.
 
-Run **Fix includes and compile review-only DD-WRT RA72 Device Tree**. Its
-artifact is named `ddwrt-ra72-phase11-dts-compile-fix`. This remains a
+Version 0.11.4 corrects the compatibility-tree composition. It imports only
+the RA72 board DTS from OpenWrt and retains DD-WRT's native `ipq5018.dtsi` and
+`ipq5018-ess.dtsi`. Earlier compiler-test composition overwrote those DD-WRT
+base files with OpenWrt variants and thereby removed labels required by the
+DD-WRT tree, including `q6_region`, `q6_etr_region`, and `ge_phy`.
+
+## Phase 12
+
+Phase 12 consolidates the verified Phase 11 corrections into one uniquely
+numbered stage. It retains DD-WRT's native `ipq5018.dtsi` and
+`ipq5018-ess.dtsi`, imports only the RA72 board DTS, supplies the required
+Linux 6.12 input binding header, and excludes the OpenWrt-only `&ge_phy`
+overlay from the compiler-test copy.
+
+Run **Phase 12: Compile review-only DD-WRT RA72 Device Tree with native DD-WRT IPQ5018 base**.
+Its artifact is named `ddwrt-ra72-phase12-dts-compile`. This remains a
 source/compiler audit; it produces no firmware that is safe to boot or flash.
