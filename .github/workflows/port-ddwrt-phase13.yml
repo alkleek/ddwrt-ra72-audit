@@ -1,4 +1,4 @@
-name: "Phase 13: Resolve Q6 reserved-memory labels and compile review-only DD-WRT RA72 Device Tree"
+name: "Phase 13 (fixed): Resolve Q6 reserved-memory labels and compile review-only DD-WRT RA72 Device Tree"
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   phase13:
-    name: Phase 13 Q6 reserved-memory compile audit
+    name: Phase 13 fixed Q6 reserved-memory compile audit
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
@@ -41,7 +41,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: ddwrt-ra72-phase13-q6-dts-compile
+          name: ddwrt-ra72-phase13-fixed-q6-dts-compile
           path: phase13-output/
           if-no-files-found: error
           retention-days: 14
