@@ -1,0 +1,41 @@
+name: "Phase 17: Classify DD-WRT IPQ5018 build foundation for Xiaomi Mi AIoT AX6000 RA72"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ddwrt_source_url:
+        description: "DD-WRT SVN source to audit"
+        required: true
+        default: "svn://svn.dd-wrt.com/DD-WRT"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: "Phase 17 IPQ5018 foundation classification"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      DDWRT_SOURCE_URL: ${{ inputs.ddwrt_source_url }}
+    steps:
+      - name: Check out audit project
+        uses: actions/checkout@v4
+
+      - name: Install audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends subversion
+
+      - name: Classify public DD-WRT IPQ5018 signals
+        run: bash scripts/audit-phase17.sh
+
+      - name: Upload Phase 17 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase17-ipq5018-foundation-classification
+          path: phase17-output/
+          if-no-files-found: error
+
