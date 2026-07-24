@@ -1,0 +1,47 @@
+name: "Phase 16: Audit DD-WRT kernel baseline with resilient source discovery for RA72"
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_ref:
+        description: "Verified OpenWrt branch, tag, or commit used only as a comparison reference"
+        required: true
+        default: "openwrt-25.12"
+        type: string
+      ddwrt_source_url:
+        description: "Optional DD-WRT SVN URL override; leave empty for automatic discovery"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: "Phase 16 resilient source and kernel baseline audit"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      OPENWRT_REF: ${{ inputs.openwrt_ref }}
+      DDWRT_SOURCE_URL: ${{ inputs.ddwrt_source_url }}
+    steps:
+      - name: "Check out audit project"
+        uses: actions/checkout@v4
+
+      - name: "Install audit tools"
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends subversion curl ca-certificates
+
+      - name: "Run resilient DD-WRT source audit"
+        run: bash scripts/audit-phase16.sh
+
+      - name: "Upload Phase 16 report"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase16-resilient-kernel-baseline
+          path: phase16-output/
+          if-no-files-found: error
+          retention-days: 30
