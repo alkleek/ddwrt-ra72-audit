@@ -1,0 +1,47 @@
+name: "Phase 13: Resolve Q6 reserved-memory labels and compile review-only DD-WRT RA72 Device Tree"
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_ref:
+        description: "Verified OpenWrt branch, tag, or commit used as the RA72 reference"
+        required: true
+        default: "openwrt-25.12"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  phase13:
+    name: Phase 13 Q6 reserved-memory compile audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      OPENWRT_REPOSITORY: https://github.com/openwrt/openwrt.git
+      DDWRT_SVN_URL: https://svn.dd-wrt.com/DD-WRT
+      LINUX_DT_BINDINGS_URL: https://raw.githubusercontent.com/torvalds/linux/master/include/dt-bindings
+
+    steps:
+      - name: Check out port project
+        uses: actions/checkout@v5
+
+      - name: Install Device Tree audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            build-essential curl device-tree-compiler git python3 subversion
+
+      - name: Resolve Q6 nodes and compile review-only RA72 Device Tree
+        env:
+          OPENWRT_REF: ${{ inputs.openwrt_ref }}
+        run: bash scripts/port-phase13.sh
+
+      - name: Upload Phase 13 report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: ddwrt-ra72-phase13-q6-dts-compile
+          path: phase13-output/
+          if-no-files-found: error
+          retention-days: 14
