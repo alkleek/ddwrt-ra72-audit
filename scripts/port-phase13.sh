@@ -11,6 +11,12 @@ REPORT="$OUT/REPORT-PHASE13.txt"
 rm -rf "$OUT"
 mkdir -p "$OPENWRT_DIR" "$DDWRT_DIR" "$STAGE" "$REVIEW"
 
+cat > "$OUT/DO-NOT-FLASH.txt" <<'EOF'
+PHASE 13 OUTPUT IS A SOURCE/DEVICE-TREE COMPILER AUDIT ONLY.
+IT IS NOT DD-WRT FIRMWARE AND MUST NOT BE FLASHED TO ANY ROUTER.
+Exact device under study: Xiaomi Mi AIoT AX6000, model RA72 only.
+EOF
+
 cleanup_source_trees() {
   rm -rf "$OPENWRT_DIR" "$DDWRT_DIR"
 }
@@ -35,8 +41,7 @@ git -C "$OPENWRT_DIR" checkout --detach FETCH_HEAD
 git -C "$OPENWRT_DIR" rev-parse HEAD | tee "$REVIEW/openwrt-commit.txt"
 
 BOARD_DTS="$(find "$OPENWRT_DIR/target/linux/qualcommax" -type f \
-  \( -name 'ipq5018-ax6000.dts' -o -name '*ax6000*.dts' \) \
-  -print | head -n 1)"
+  -name 'ipq5018-ax6000.dts' -print -quit)"
 
 if [[ -z "$BOARD_DTS" ]] || ! grep -Eqi 'ax6000|ra72' "$BOARD_DTS"; then
   echo "BLOCKED: verified OpenWrt reference does not contain the RA72/AX6000 board DTS."
@@ -46,9 +51,34 @@ fi
 
 printf '%s\n' "${BOARD_DTS#"$OPENWRT_DIR/"}" | tee "$REVIEW/openwrt-board-dts-path.txt"
 
-svn export --force "$DDWRT_SVN_URL/src/linux/universal/linux-6.1/arch/arm64/boot/dts/qcom" \
+echo "Locating a public DD-WRT kernel tree with native IPQ5018 support..."
+DDWRT_KERNEL_REL=""
+for candidate in \
+  "src/linux/universal/linux-6.12-nss" \
+  "src/linux/universal/linux-6.12" \
+  "src/linux/universal/linux-6.6-nss" \
+  "src/linux/universal/linux-6.6" \
+  "src/linux/universal/linux-6.1"; do
+  if svn info "$DDWRT_SVN_URL/$candidate/arch/arm64/boot/dts/qcom/ipq5018.dtsi" \
+      >/dev/null 2>&1; then
+    DDWRT_KERNEL_REL="$candidate"
+    break
+  fi
+done
+
+if [[ -z "$DDWRT_KERNEL_REL" ]]; then
+  echo "BLOCKED: unable to locate a public DD-WRT kernel tree containing ipq5018.dtsi."
+  echo "BLOCKED: no public DD-WRT kernel tree with native ipq5018.dtsi was found." \
+    > "$REVIEW/phase13-status.txt"
+  echo "No firmware was built and nothing is flashable."
+  exit 0
+fi
+
+printf '%s\n' "$DDWRT_KERNEL_REL" | tee "$REVIEW/ddwrt-kernel-path.txt"
+
+svn export --force "$DDWRT_SVN_URL/$DDWRT_KERNEL_REL/arch/arm64/boot/dts/qcom" \
   "$DDWRT_DIR/qcom" >/dev/null
-svn export --force "$DDWRT_SVN_URL/src/linux/universal/linux-6.1/include/dt-bindings" \
+svn export --force "$DDWRT_SVN_URL/$DDWRT_KERNEL_REL/include/dt-bindings" \
   "$DDWRT_DIR/dt-bindings" >/dev/null
 
 cp -a "$DDWRT_DIR/qcom/." "$STAGE/"
@@ -260,11 +290,5 @@ if [[ "$cpp_status" -eq 0 && "$dtc_status" -eq 0 && "$roundtrip_status" -eq 0 ]]
 else
   echo "BLOCKED: review the compiler logs. No firmware was produced."
 fi
-
-cat > "$OUT/DO-NOT-FLASH.txt" <<'EOF'
-PHASE 13 OUTPUT IS A SOURCE/DEVICE-TREE COMPILER AUDIT ONLY.
-IT IS NOT DD-WRT FIRMWARE AND MUST NOT BE FLASHED TO ANY ROUTER.
-Exact device under study: Xiaomi Mi AIoT AX6000, model RA72 only.
-EOF
 
 exit 0
