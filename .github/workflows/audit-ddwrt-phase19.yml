@@ -1,0 +1,42 @@
+name: "Phase 19: Select closest DD-WRT IPQ5018 build template for RA72"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ddwrt_source_url:
+        description: "Public DD-WRT SVN source URL to audit"
+        required: true
+        default: "svn://svn.dd-wrt.com/DD-WRT"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: "Phase 19 IPQ5018 build-template selection"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      DDWRT_SOURCE_URL: ${{ inputs.ddwrt_source_url }}
+
+    steps:
+      - name: Check out audit project
+        uses: actions/checkout@v4
+
+      - name: Install audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends subversion python3
+
+      - name: Select closest public DD-WRT IPQ5018 build template
+        run: bash scripts/audit-phase19.sh
+
+      - name: Upload Phase 19 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase19-build-template-selection
+          path: phase19-output/
+          if-no-files-found: warn
+          retention-days: 30
