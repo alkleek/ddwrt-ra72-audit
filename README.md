@@ -147,6 +147,12 @@ Version 0.11.2 also materializes the real Linux
 `include/uapi/linux/input-event-codes.h` target. This avoids passing the
 one-line text of a relative symlink to `dtc`.
 
+Version 0.11.3 removes, from the compiler-test copy only, the optional
+OpenWrt-only `&ge_phy` overlay discovered by the previous Phase 11 run.
+DD-WRT's public IPQ5018 tree has no `ge_phy` label. The removal is recorded in
+`review/source-adaptations.txt`; it is not a claim that the Ethernet PHY is
+supported or operational.
+
 Run **Fix includes and compile review-only DD-WRT RA72 Device Tree**. Its
 artifact is named `ddwrt-ra72-phase11-dts-compile-fix`. This remains a
 source/compiler audit; it produces no firmware that is safe to boot or flash.

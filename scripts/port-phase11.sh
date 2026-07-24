@@ -65,6 +65,27 @@ fi
 cp -a "$ddwrt_tree/qcom/." "$stage/qcom/"
 cp "$openwrt_dts" "$stage/qcom/$candidate_name"
 
+# OpenWrt applies an optional analogue PHY tuning property through the
+# OpenWrt-only `ge_phy` label. The public DD-WRT IPQ5018 Device Tree inventory
+# does not define that label, so omit only this overlay from the compiler-test
+# copy. This does not claim that the PHY is supported or operational.
+sed -i \
+  '/^\/\/ IPQ5018 GE Phy -> QCA8337 PHY0$/,/^};$/d' \
+  "$stage/qcom/$candidate_name"
+
+cat > "$review/source-adaptations.txt" <<'EOF'
+Compiler-test adaptation:
+- Removed the optional OpenWrt-only &ge_phy qcom,dac-preset-short-cable overlay.
+
+Reason:
+- The public DD-WRT IPQ5018 Device Tree inventory does not define a ge_phy
+  label. This removal allows dtc to validate the remaining RA72 description.
+
+Safety:
+- This is not a hardware-support decision and does not prove PHY operation.
+- The generated object remains review-only and must not be booted or flashed.
+EOF
+
 for source in "$openwrt_qcom/ipq5018-ess.dtsi" \
               "$openwrt_qcom/ipq5018.dtsi"; do
   if [[ -s "$source" ]]; then
