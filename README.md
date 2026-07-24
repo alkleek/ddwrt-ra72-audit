@@ -1,9 +1,9 @@
 # DD-WRT private port audit - Xiaomi Mi AIoT AX6000 RA72
 
-## Phase 15
+## Phase 16
 
-Phase 15 identifies the closest public DD-WRT kernel baseline and Qualcomm
-ARM64 Device Tree foundation for this exact device:
+Phase 16 repeats the DD-WRT source and kernel-baseline audit with resilient
+source discovery for this exact device:
 
 - Product: **Xiaomi Mi AIoT AX6000**
 - Model: **RA72**
@@ -12,34 +12,39 @@ ARM64 Device Tree foundation for this exact device:
 
 It is **not** for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-It compares the verified OpenWrt reference with DD-WRT's public source
-inventory. It records kernel candidates, Qualcomm ARM64 Device Tree roots, and
-explicit IPQ5018/IPQ50xx signals. It does not treat isolated source matches as
-proof of device support.
+Phase 15 ended with:
 
-## Run Phase 15
+`AUDIT_INCOMPLETE_DDWRT_SOURCE_UNAVAILABLE`
+
+That means the public DD-WRT source endpoint was unavailable during the run.
+It is not evidence that an IPQ5018 platform foundation is absent.
+
+Phase 16 tries the public HTTPS and SVN endpoints up to three times each,
+records every failure, and permits an optional source URL override. If the
+source becomes available, it inventories kernel/build paths, Qualcomm ARM64
+Device Tree roots, and IPQ5018/IPQ50xx signals.
+
+## Run Phase 16
 
 In GitHub:
 
-1. Open **Actions**.
-2. Select **Phase 15: Audit DD-WRT kernel baseline and ARM64 DTS foundation for RA72**.
-3. Select **Run workflow**.
-4. Keep `openwrt-25.12` unless intentionally auditing another reviewed ref.
-5. Download the artifact named `ddwrt-ra72-phase15-kernel-baseline`.
+1. Upload this update to the repository and commit it.
+2. Open **Actions**.
+3. Select **Phase 16: Audit DD-WRT kernel baseline with resilient source discovery for RA72**.
+4. Select **Run workflow**.
+5. Keep `openwrt-25.12`.
+6. Leave the optional DD-WRT source URL empty.
+7. Download `ddwrt-ra72-phase16-resilient-kernel-baseline`.
 
-Important output:
+Send back:
 
-- `REPORT-PHASE15.txt`
-- `review/phase15-status.txt`
-- `review/ddwrt-kernel-candidates.txt`
-- `review/ddwrt-arm64-dts-roots.txt`
-- `review/ddwrt-ipq5018-signals.txt`
-- `review/openwrt-kernel-baseline.txt`
+- `REPORT-PHASE16.txt`
+- `review/phase16-status.txt`
 
 ## Safety
 
-Phase 15 is analysis-only. It builds no firmware, creates no boot image, does
+Phase 16 is analysis-only. It builds no firmware, creates no boot image, does
 not access the router, and produces nothing flashable.
 
-Previous audit workflows remain in the repository for traceability. Each new
-stage uses its own phase number; Phase 15 does not replace any earlier phase.
+Previous workflows remain in the repository for traceability. This stage uses
+the unique Phase 16 name and does not replace an earlier phase.
