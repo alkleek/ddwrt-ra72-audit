@@ -1,0 +1,55 @@
+name: "Phase 22: Integrate and compile DD-WRT RA72 source patch"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ddwrt_source_url:
+        description: "Public DD-WRT SVN source URL"
+        required: true
+        default: "svn://svn.dd-wrt.com/DD-WRT"
+        type: string
+      reference_repository:
+        description: "Verified GPL repository containing the RA72 DTS reference"
+        required: true
+        default: "https://github.com/openwrt/openwrt.git"
+        type: string
+      reference_ref:
+        description: "Verified reference branch"
+        required: true
+        default: "openwrt-25.12"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  integrate:
+    name: "Phase 22 RA72 temporary source integration and DTS compile"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      DDWRT_SOURCE_URL: ${{ inputs.ddwrt_source_url }}
+      REFERENCE_REPOSITORY: ${{ inputs.reference_repository }}
+      REFERENCE_REF: ${{ inputs.reference_ref }}
+
+    steps:
+      - name: Check out DD-WRT RA72 project
+        uses: actions/checkout@v4
+
+      - name: Install source and device-tree tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            build-essential curl device-tree-compiler git patch python3 subversion
+
+      - name: Integrate and compile the RA72 source patch
+        run: bash scripts/port-phase22.sh
+
+      - name: Upload Phase 22 review artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase22-source-integration-compile
+          path: phase22-output/
+          if-no-files-found: warn
+          retention-days: 30
