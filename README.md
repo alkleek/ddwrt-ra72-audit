@@ -1,8 +1,7 @@
-# DD-WRT RA72 Phase 26
+# DD-WRT RA72 Phase 27
 
-Phase 26 materializes Linux binding headers stored as Git symbolic links
-before compiling the DD-WRT source patch for the exact
-**Xiaomi Mi AIoT AX6000, model RA72**.
+Phase 27 integrates the missing native GE PHY label before compiling the
+DD-WRT source patch for the exact **Xiaomi Mi AIoT AX6000, model RA72**.
 
 ## Exact device
 
@@ -12,27 +11,27 @@ before compiling the DD-WRT source patch for the exact
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000 (MediaTek).
 
-## Why Phase 25 stopped
+## Why Phase 26 stopped
 
-Phase 25 resolved the complete RA72 binding closure and successfully
-preprocessed the DTS. DTC then read this as the complete contents of
-`dt-bindings/input/linux-event-codes.h`:
+Phase 26 successfully materialized the Linux input-event-codes binding,
+resolved the RA72 dependency closure, and completed preprocessing. DTC then
+reported:
 
-`../../uapi/linux/input-event-codes.h`
+`Label or path ge_phy not found`
 
-This is the target of a Git symbolic link. A raw-file download returned the
-link target path instead of the target header contents, so DTC reported a
-syntax error on line 1.
+The native DD-WRT `ipq5018.dtsi` already contains the correct internal PHY
+with compatible `ethernet-phy-id004d.d0c0` and `reg = <7>`, but its node is
+named `ethernet-phy@0` and has no `ge_phy` label.
 
-## Phase 26 correction
+## Phase 27 correction
 
-The resolver now recognizes safe one-line relative Linux include links and
-materializes the actual target header. Every replacement is recorded in:
+Phase 27 finds that exact existing node, labels it, and corrects only its
+unit address:
 
-`review/materialized-binding-symlinks.txt`
+`ge_phy: ethernet-phy@7`
 
-This phase then repeats the exact preprocess, DTC compile, decompile,
-round-trip compile, patch-generation, and patch-application checks.
+It does not add or duplicate a PHY. The resulting `ipq5018.dtsi` change is
+included in the unified DD-WRT review patch.
 
 ## Safety
 
@@ -43,20 +42,19 @@ flashable.
 
 In GitHub **Actions**, select:
 
-`Phase 26: Materialize RA72 binding symlinks and compile patch`
+`Phase 27: Integrate RA72 GE PHY label and compile patch`
 
 Run with default inputs and download:
 
-`ddwrt-ra72-phase26-symlink-binding-materialization`
+`ddwrt-ra72-phase27-ge-phy-label-integration`
 
 Send back:
 
-- `REPORT-PHASE26.txt`
-- `review/phase26-status.txt`
-- `review/phase26-integration-checks.txt`
-- `review/materialized-binding-symlinks.txt`
-- `review/binding-resolution.log`
-- `review/required-include-closure.txt`
+- `REPORT-PHASE27.txt`
+- `review/phase27-status.txt`
+- `review/phase27-integration-checks.txt`
+- `review/ge-phy-resolution.txt`
 - `review/compile-status.txt`
 - `review/cpp.log`
 - `review/dtc-compile.log`
+- `review/ra72.decompiled.dts`
