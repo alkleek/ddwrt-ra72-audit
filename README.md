@@ -1,6 +1,6 @@
-# DD-WRT RA72 Phase 24
+# DD-WRT RA72 Phase 25
 
-Phase 24 corrects the dependency collection step for the exact
+Phase 25 fixes nested binding-header resolution for the exact
 **Xiaomi Mi AIoT AX6000, model RA72**.
 
 ## Exact device
@@ -11,50 +11,50 @@ Phase 24 corrects the dependency collection step for the exact
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000 (MediaTek).
 
-## Why Phase 23 stopped
+## Why Phase 24 stopped
 
-Phase 23 passed the corrected Q6 dependency decision, then stopped while
-resolving `dt-bindings`. It scanned every Qualcomm DTS exported from DD-WRT,
-including unrelated devices. An include used only by another board could
-therefore stop the RA72 audit.
+The RA72-only dependency closure correctly reached:
 
-## Phase 24 correction
+`dt-bindings/input/input.h`
 
-Phase 24 constructs a recursive dependency closure beginning only with:
+That header uses a quoted sibling include:
 
-`ipq5018-xiaomi-ra72.dts`
+`linux-event-codes.h`
 
-It follows the DTS/DTSI files included by RA72 and resolves only the
-`dt-bindings` reached through that chain. It records:
+Phase 24 treated the missing sibling as an ordinary DTS source include.
+Phase 25 correctly classifies it as:
 
-- every required source/header in `required-include-closure.txt`;
-- each required download in `binding-resolution.log`;
-- unresolved source includes in a dedicated file;
-- explicit blocked statuses instead of a generic error.
+`dt-bindings/input/linux-event-codes.h`
 
-It then compiles and round-trip checks the DTS and validates the unified
-DD-WRT source patch.
+and allows the scoped binding fetcher to resolve it.
+
+## Additional reliability correction
+
+Expected compiler or resolver failures are now captured explicitly without
+triggering the generic `BLOCKED_UNEXPECTED_ERROR` handler. The artifact will
+therefore retain the precise blocked status and diagnostic logs if another
+real dependency is missing.
 
 ## Safety
 
-No firmware is built, and no router is contacted. Nothing in this phase is
+No firmware is built, and no router is contacted. Nothing from this phase is
 flashable.
 
 ## Run
 
 In GitHub **Actions**, select:
 
-`Phase 24: Resolve RA72 bindings and compile DD-WRT patch`
+`Phase 25: Resolve nested RA72 bindings and compile patch`
 
 Run with default inputs and download:
 
-`ddwrt-ra72-phase24-scoped-binding-closure`
+`ddwrt-ra72-phase25-nested-binding-resolution`
 
 Send back:
 
-- `REPORT-PHASE24.txt`
-- `review/phase24-status.txt`
-- `review/phase24-integration-checks.txt`
+- `REPORT-PHASE25.txt`
+- `review/phase25-status.txt`
+- `review/phase25-integration-checks.txt`
 - `review/binding-resolution.log`
 - `review/required-include-closure.txt`
 - `review/missing-binding-includes.txt`
