@@ -1,6 +1,6 @@
-# DD-WRT RA72 Phase 27
+# DD-WRT RA72 Phase 28
 
-Phase 27 integrates the missing native GE PHY label before compiling the
+Phase 28 integrates the missing native Q6 memory nodes before compiling the
 DD-WRT source patch for the exact **Xiaomi Mi AIoT AX6000, model RA72**.
 
 ## Exact device
@@ -11,27 +11,28 @@ DD-WRT source patch for the exact **Xiaomi Mi AIoT AX6000, model RA72**.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000 (MediaTek).
 
-## Why Phase 26 stopped
+## Why Phase 27 stopped
 
-Phase 26 successfully materialized the Linux input-event-codes binding,
-resolved the RA72 dependency closure, and completed preprocessing. DTC then
-reported:
+Phase 27 successfully found and labeled the existing internal GE PHY. DTC
+then reported missing `q6_region` and `q6_etr_region` labels referenced by
+the active native DD-WRT `ipq5018.dtsi`.
 
-`Label or path ge_phy not found`
+## Phase 28 correction
 
-The native DD-WRT `ipq5018.dtsi` already contains the correct internal PHY
-with compatible `ethernet-phy-id004d.d0c0` and `reg = <7>`, but its node is
-named `ethernet-phy@0` and has no `ge_phy` label.
+Phase 28 detects references across the real RA72 include closure and imports
+only the missing balanced memory nodes from DD-WRT's direct MR5500/MX5500
+IPQ5018 image templates. Both template definitions must agree before use.
 
-## Phase 27 correction
+Expected ranges:
 
-Phase 27 finds that exact existing node, labels it, and corrects only its
-unit address:
+```text
+q6_region      0x4b000000  size 0x01700000
+q6_etr_region  0x4c800000  size 0x00100000
+```
 
-`ge_phy: ethernet-phy@7`
+Source files and SHA-256 values are recorded in:
 
-It does not add or duplicate a PHY. The resulting `ipq5018.dtsi` change is
-included in the unified DD-WRT review patch.
+`review/q6-node-provenance.tsv`
 
 ## Safety
 
@@ -42,19 +43,19 @@ flashable.
 
 In GitHub **Actions**, select:
 
-`Phase 27: Integrate RA72 GE PHY label and compile patch`
+`Phase 28: Integrate native RA72 Q6 memory nodes and compile patch`
 
 Run with default inputs and download:
 
-`ddwrt-ra72-phase27-ge-phy-label-integration`
+`ddwrt-ra72-phase28-native-q6-memory-integration`
 
 Send back:
 
-- `REPORT-PHASE27.txt`
-- `review/phase27-status.txt`
-- `review/phase27-integration-checks.txt`
-- `review/ge-phy-resolution.txt`
+- `REPORT-PHASE28.txt`
+- `review/phase28-status.txt`
+- `review/phase28-integration-checks.txt`
+- `review/q6-resolution.tsv`
+- `review/q6-node-provenance.tsv`
 - `review/compile-status.txt`
-- `review/cpp.log`
 - `review/dtc-compile.log`
 - `review/ra72.decompiled.dts`
