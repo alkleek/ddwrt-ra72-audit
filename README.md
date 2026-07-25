@@ -1,58 +1,63 @@
-# DD-WRT RA72 Phase 23
+# DD-WRT RA72 Phase 24
 
-Phase 23 corrects the failed Phase 22 dependency rule for the exact
+Phase 24 corrects the dependency collection step for the exact
 **Xiaomi Mi AIoT AX6000, model RA72**.
 
 ## Exact device
 
 - Xiaomi Mi AIoT AX6000
 - Model: RA72
-- SoC: Qualcomm IPQ5018
-- Board family: MP03.1
+- Qualcomm IPQ5018 / MP03.1
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000 (MediaTek).
-The source compatible `xiaomi,ax6000` refers to RA72 in this project.
 
-## Why Phase 22 failed
+## Why Phase 23 stopped
 
-Phase 22 always demanded historical labels named `q6_region` and
-`q6_etr_region`. The current verified RA72 DTS does not reference those labels,
-so requiring their definitions was incorrect.
+Phase 23 passed the corrected Q6 dependency decision, then stopped while
+resolving `dt-bindings`. It scanned every Qualcomm DTS exported from DD-WRT,
+including unrelated devices. An include used only by another board could
+therefore stop the RA72 audit.
 
-## What Phase 23 changes
+## Phase 24 correction
 
-Phase 23 evaluates Q6 dependencies dynamically:
+Phase 24 constructs a recursive dependency closure beginning only with:
 
-- if the current RA72 DTS does not reference a label, the label is not needed;
-- if it references a label already defined by the native DD-WRT base, that
-  native definition is used;
-- if a referenced label is unresolved, the phase stops safely.
+`ipq5018-xiaomi-ra72.dts`
 
-It then performs the same temporary DD-WRT source integration, DTS compile,
-decompile, round-trip compile, unified-patch generation, and clean patch-apply
-test.
+It follows the DTS/DTSI files included by RA72 and resolves only the
+`dt-bindings` reached through that chain. It records:
+
+- every required source/header in `required-include-closure.txt`;
+- each required download in `binding-resolution.log`;
+- unresolved source includes in a dedicated file;
+- explicit blocked statuses instead of a generic error.
+
+It then compiles and round-trip checks the DTS and validates the unified
+DD-WRT source patch.
 
 ## Safety
 
-No firmware is built. No router is contacted. Nothing from this phase is
+No firmware is built, and no router is contacted. Nothing in this phase is
 flashable.
 
 ## Run
 
-Open GitHub **Actions** and select:
+In GitHub **Actions**, select:
 
-`Phase 23: Integrate current DD-WRT RA72 DTS patch`
+`Phase 24: Resolve RA72 bindings and compile DD-WRT patch`
 
-Run it with the default inputs and download:
+Run with default inputs and download:
 
-`ddwrt-ra72-phase23-current-dts-integration`
+`ddwrt-ra72-phase24-scoped-binding-closure`
 
 Send back:
 
-- `REPORT-PHASE23.txt`
-- `review/phase23-status.txt`
-- `review/phase23-integration-checks.txt`
-- `review/q6-resolution.tsv`
+- `REPORT-PHASE24.txt`
+- `review/phase24-status.txt`
+- `review/phase24-integration-checks.txt`
+- `review/binding-resolution.log`
+- `review/required-include-closure.txt`
+- `review/missing-binding-includes.txt`
 - `review/compile-status.txt`
+- `review/cpp.log`
 - `review/dtc-compile.log`
-- `patches/0001-ddwrt-add-xiaomi-mi-aiot-ax6000-ra72-review.patch`
