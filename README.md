@@ -1,6 +1,7 @@
-# DD-WRT RA72 Phase 25
+# DD-WRT RA72 Phase 26
 
-Phase 25 fixes nested binding-header resolution for the exact
+Phase 26 materializes Linux binding headers stored as Git symbolic links
+before compiling the DD-WRT source patch for the exact
 **Xiaomi Mi AIoT AX6000, model RA72**.
 
 ## Exact device
@@ -11,29 +12,27 @@ Phase 25 fixes nested binding-header resolution for the exact
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000 (MediaTek).
 
-## Why Phase 24 stopped
+## Why Phase 25 stopped
 
-The RA72-only dependency closure correctly reached:
+Phase 25 resolved the complete RA72 binding closure and successfully
+preprocessed the DTS. DTC then read this as the complete contents of
+`dt-bindings/input/linux-event-codes.h`:
 
-`dt-bindings/input/input.h`
+`../../uapi/linux/input-event-codes.h`
 
-That header uses a quoted sibling include:
+This is the target of a Git symbolic link. A raw-file download returned the
+link target path instead of the target header contents, so DTC reported a
+syntax error on line 1.
 
-`linux-event-codes.h`
+## Phase 26 correction
 
-Phase 24 treated the missing sibling as an ordinary DTS source include.
-Phase 25 correctly classifies it as:
+The resolver now recognizes safe one-line relative Linux include links and
+materializes the actual target header. Every replacement is recorded in:
 
-`dt-bindings/input/linux-event-codes.h`
+`review/materialized-binding-symlinks.txt`
 
-and allows the scoped binding fetcher to resolve it.
-
-## Additional reliability correction
-
-Expected compiler or resolver failures are now captured explicitly without
-triggering the generic `BLOCKED_UNEXPECTED_ERROR` handler. The artifact will
-therefore retain the precise blocked status and diagnostic logs if another
-real dependency is missing.
+This phase then repeats the exact preprocess, DTC compile, decompile,
+round-trip compile, patch-generation, and patch-application checks.
 
 ## Safety
 
@@ -44,20 +43,20 @@ flashable.
 
 In GitHub **Actions**, select:
 
-`Phase 25: Resolve nested RA72 bindings and compile patch`
+`Phase 26: Materialize RA72 binding symlinks and compile patch`
 
 Run with default inputs and download:
 
-`ddwrt-ra72-phase25-nested-binding-resolution`
+`ddwrt-ra72-phase26-symlink-binding-materialization`
 
 Send back:
 
-- `REPORT-PHASE25.txt`
-- `review/phase25-status.txt`
-- `review/phase25-integration-checks.txt`
+- `REPORT-PHASE26.txt`
+- `review/phase26-status.txt`
+- `review/phase26-integration-checks.txt`
+- `review/materialized-binding-symlinks.txt`
 - `review/binding-resolution.log`
 - `review/required-include-closure.txt`
-- `review/missing-binding-includes.txt`
 - `review/compile-status.txt`
 - `review/cpp.log`
 - `review/dtc-compile.log`
