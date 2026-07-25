@@ -258,6 +258,45 @@ if not native_base.is_file():
     raise SystemExit("Native DD-WRT ipq5018.dtsi was not exported")
 native_base_text = native_base.read_text(encoding="utf-8")
 
+# The verified GPL board source uses the generic display string
+# "Xiaomi AX6000", even though its compatible and hardware definition are for
+# the distinct RA72 product. Keep the binding-compatible value unchanged, but
+# make the human-readable model unambiguous so logs cannot be confused with
+# the IPQ8072A Mi Router AX6000.
+model_pattern = re.compile(
+    r'(?m)^(?P<indent>[ \t]*)model[ \t]*=[ \t]*'
+    r'"(?P<value>[^"]+)"[ \t]*;'
+)
+model_matches = list(model_pattern.finditer(board_text))
+if len(model_matches) != 1:
+    raise SystemExit(
+        "Expected exactly one RA72 root model property; "
+        f"found {len(model_matches)}"
+    )
+original_model = model_matches[0].group("value")
+exact_model = "Xiaomi Mi AIoT AX6000 RA72"
+board_text = model_pattern.sub(
+    lambda match: f'{match.group("indent")}model = "{exact_model}";',
+    board_text,
+    count=1,
+)
+if "xiaomi,ax6000" not in board_text or "qcom,ipq5018" not in board_text:
+    raise SystemExit("Exact RA72 compatible identity is missing")
+(review / "model-identity-resolution.txt").write_text(
+    "\n".join(
+        [
+            f"original_model={original_model}",
+            f"resolved_model={exact_model}",
+            "compatible=xiaomi,ax6000",
+            "soc_compatible=qcom,ipq5018",
+            "device=Xiaomi Mi AIoT AX6000",
+            "model_code=RA72",
+        ]
+    )
+    + "\n",
+    encoding="utf-8",
+)
+
 # DD-WRT already carries the IPQ5018 internal GE PHY at MDIO address 7, but
 # this native baseline names the node ethernet-phy@0 and does not label it.
 # The imported RA72 board and native dp1 node both reference &ge_phy. Label
@@ -874,6 +913,8 @@ match = re.search(
 recipe = match.group(0) if match else ""
 
 checks = {
+    "exact_ra72_model_identity":
+        'model = "Xiaomi Mi AIoT AX6000 RA72";' in board,
     "exact_compatible_xiaomi_ax6000": "xiaomi,ax6000" in board,
     "soc_compatible_ipq5018": "qcom,ipq5018" in board or "ipq5018" in board,
     "qca8337_switch_address_11": "ethernet-switch@11" in board,

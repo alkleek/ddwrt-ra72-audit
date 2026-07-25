@@ -1,7 +1,13 @@
-# DD-WRT RA72 Phase 29
+# DD-WRT RA72 Phase 30
 
-Phase 29 takes the successful source-only Phase 28 patch and asks the real
-DD-WRT kernel build system to build the exact RA72 DTB.
+Phase 29 proved that the native DD-WRT kernel can build the RA72 Device Tree.
+Its only failed validation was the generic human-readable model string.
+
+Phase 30 corrects that property to:
+
+`Xiaomi Mi AIoT AX6000 RA72`
+
+and repeats the native Kbuild, decompile, and round-trip validation.
 
 ## Exact device
 
@@ -9,50 +15,37 @@ DD-WRT kernel build system to build the exact RA72 DTB.
 - Model **RA72**
 - Qualcomm **IPQ5018 / MP03.1**
 
-This is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
+It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## What this phase builds
+## Safety
 
-Only:
-
-`qcom/ipq5018-xiaomi-ra72.dtb`
-
-It uses the complete selected public DD-WRT kernel tree and the native
-`.config_ipq6018` baseline.
-
-It does **not** build:
-
-- a DD-WRT firmware;
-- a kernel `Image`;
-- UBI, BIN, ITB, TRX, or IMG files;
-- anything approved for booting or flashing.
-
-Nothing connects to the router. GitHub's Ubuntu runner performs all work.
+This phase builds one review DTB only. It does not build DD-WRT firmware,
+a kernel image, UBI, BIN, ITB, TRX, or IMG. It does not contact the router.
+Do not boot or flash the review DTB.
 
 ## Run
 
 In GitHub **Actions**, select:
 
-`Phase 29: Build RA72 DTB through native DD-WRT kernel`
+`Phase 30: Build exact-model RA72 DTB through native DD-WRT kernel`
 
-Press **Run workflow** and leave the three default fields unchanged.
+Press **Run workflow** and leave all three fields unchanged.
 
-The complete kernel export is much larger than earlier phases. The workflow
-prints progress every 30 seconds and may take considerably longer.
+The complete kernel export is approximately 1.7 GB, so this workflow may
+take longer than the earlier source-only phases. Progress is printed every
+30 seconds.
 
 Download:
 
-`ddwrt-ra72-phase29-native-kernel-dtb-build`
+`ddwrt-ra72-phase30-exact-model-native-dtb-build`
 
 Send back:
 
-- `REPORT-PHASE29.txt`
-- `review/phase29-status.txt`
+- `REPORT-PHASE30.txt`
+- `review/phase30-status.txt`
 - `review/build-status.txt`
-- `review/phase29-integration-checks.txt`
-- `review/olddefconfig.log`
+- `review/phase30-integration-checks.txt`
+- `review/model-identity-resolution.txt`
 - `review/native-kbuild.log`
-- `review/warning-summary.txt`
 - `review/native-dtb-decompile.log`
-
-Do not boot or flash the generated review DTB.
+- `review/warning-summary.txt`
