@@ -1,7 +1,7 @@
-# DD-WRT RA72 Phase 22
+# DD-WRT RA72 Phase 23
 
-This repository update performs a temporary, review-only source integration
-for the exact **Xiaomi Mi AIoT AX6000, model RA72**.
+Phase 23 corrects the failed Phase 22 dependency rule for the exact
+**Xiaomi Mi AIoT AX6000, model RA72**.
 
 ## Exact device
 
@@ -10,49 +10,49 @@ for the exact **Xiaomi Mi AIoT AX6000, model RA72**.
 - SoC: Qualcomm IPQ5018
 - Board family: MP03.1
 
-It is **not** for the Xiaomi Mi Router AX6000 (IPQ8072A), and it is not for the
-Redmi AX6000 (MediaTek). The DD-WRT project may use the upstream compatible
-string `xiaomi,ax6000`; in this project that compatible refers only to RA72.
+It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000 (MediaTek).
+The source compatible `xiaomi,ax6000` refers to RA72 in this project.
 
-## What Phase 22 does
+## Why Phase 22 failed
 
-Phase 22:
+Phase 22 always demanded historical labels named `q6_region` and
+`q6_etr_region`. The current verified RA72 DTS does not reference those labels,
+so requiring their definitions was incorrect.
 
-1. obtains the public DD-WRT IPQ5018 kernel/device-tree source;
-2. imports the verified GPL RA72 board DTS as a reference;
-3. supplies the exact Q6 reserved-memory nodes required by the DD-WRT base;
-4. registers `ipq5018-xiaomi-ra72.dtb` in the DD-WRT Qualcomm DTS Makefile;
-5. inserts the Phase 21 review recipe into a temporary
-   `src/router/Makefile.ipq60xx`;
-6. preprocesses, compiles, decompiles, and round-trip compiles the RA72 DTS;
-7. generates a unified source patch and validates that it applies cleanly.
+## What Phase 23 changes
 
-## Safety boundary
+Phase 23 evaluates Q6 dependencies dynamically:
 
-This phase does **not** build DD-WRT firmware.
+- if the current RA72 DTS does not reference a label, the label is not needed;
+- if it references a label already defined by the native DD-WRT base, that
+  native definition is used;
+- if a referenced label is unresolved, the phase stops safely.
 
-- No UBI, BIN, ITB firmware, or sysupgrade file is produced.
-- No router is contacted.
-- No SSH, UART, NAND, boot flag, or flash command is used.
-- The generated patch remains review-only and is not hardware-approved.
+It then performs the same temporary DD-WRT source integration, DTS compile,
+decompile, round-trip compile, unified-patch generation, and clean patch-apply
+test.
+
+## Safety
+
+No firmware is built. No router is contacted. Nothing from this phase is
+flashable.
 
 ## Run
 
-In GitHub, open **Actions** and select:
+Open GitHub **Actions** and select:
 
-`Phase 22: Integrate and compile DD-WRT RA72 source patch`
+`Phase 23: Integrate current DD-WRT RA72 DTS patch`
 
-Press **Run workflow**, then download:
+Run it with the default inputs and download:
 
-`ddwrt-ra72-phase22-source-integration-compile`
+`ddwrt-ra72-phase23-current-dts-integration`
 
-Send back these files:
+Send back:
 
-- `REPORT-PHASE22.txt`
-- `review/phase22-status.txt`
-- `review/phase22-integration-checks.txt`
+- `REPORT-PHASE23.txt`
+- `review/phase23-status.txt`
+- `review/phase23-integration-checks.txt`
+- `review/q6-resolution.tsv`
 - `review/compile-status.txt`
 - `review/dtc-compile.log`
 - `patches/0001-ddwrt-add-xiaomi-mi-aiot-ax6000-ra72-review.patch`
-
-Do not flash anything produced by Phase 22.
