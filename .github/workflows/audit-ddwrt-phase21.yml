@@ -1,0 +1,42 @@
+name: "Phase 21: Reconstruct DD-WRT build contract for RA72"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ddwrt_source_url:
+        description: "Public DD-WRT SVN source URL to audit"
+        required: true
+        default: "svn://svn.dd-wrt.com/DD-WRT"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: "Phase 21 RA72 build-contract reconstruction"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      DDWRT_SOURCE_URL: ${{ inputs.ddwrt_source_url }}
+
+    steps:
+      - name: Check out audit project
+        uses: actions/checkout@v4
+
+      - name: Install audit tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends subversion python3
+
+      - name: Reconstruct the RA72 build contract
+        run: bash scripts/audit-phase21.sh
+
+      - name: Upload Phase 21 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase21-build-contract-reconstruction
+          path: phase21-output/
+          if-no-files-found: warn
+          retention-days: 30
