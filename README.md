@@ -1,12 +1,13 @@
-# DD-WRT RA72 Phase 31
+# DD-WRT RA72 Phase 32
 
-Phase 30 proved that the exact-model RA72 Device Tree builds successfully
-through the native DD-WRT Linux 6.12 NSS kernel tree with 22/22 checks.
+Phase 31 showed that DD-WRT's complete kernel cannot be built with a
+separate `O=` output directory. Its LZMA and MTD Makefiles use relative
+include paths and failed to locate `types.h` and `stddef.h`.
 
-Phase 31 takes the next controlled step: it builds the native raw ARM64 Linux
-`Image` together with the exact RA72 DTB. It also audits the resolved kernel
-configuration required for NAND/UBI, Ethernet, MDIO/PHY, PCIe, and Qualcomm
-Q6 foundations.
+Phase 32 repeats the controlled kernel build inside the native DD-WRT source
+tree, where those relative paths resolve correctly. It builds the raw ARM64
+Linux `Image` together with the exact RA72 DTB and audits the resolved kernel
+configuration.
 
 ## Exact device
 
@@ -21,13 +22,13 @@ It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 This phase builds a raw kernel Image and one review DTB only. The Image is
 not complete DD-WRT firmware and is not approved for booting. It does not
 build a root filesystem, module package, FIT, UBI, BIN, ITB, TRX, or IMG.
-It does not contact the router. Do not boot or flash any Phase 31 file.
+It does not contact the router. Do not boot or flash any Phase 32 file.
 
 ## Run
 
 In GitHub **Actions**, select:
 
-`Phase 31: Build native DD-WRT ARM64 kernel for exact RA72`
+`Phase 32: Build exact RA72 kernel in native DD-WRT tree`
 
 Press **Run workflow** and leave all three fields unchanged.
 
@@ -37,14 +38,15 @@ take longer than the earlier source-only phases. Progress is printed every
 
 Download:
 
-`ddwrt-ra72-phase31-native-kernel-image-build`
+`ddwrt-ra72-phase32-in-tree-kernel-image-build`
 
 Send back:
 
-- `REPORT-PHASE31.txt`
-- `review/phase31-status.txt`
+- `REPORT-PHASE32.txt`
+- `review/phase32-status.txt`
 - `review/build-status.txt`
-- `review/phase31-integration-checks.txt`
+- `review/phase32-integration-checks.txt`
+- `review/phase31-root-cause-and-phase32-correction.txt`
 - `review/model-identity-resolution.txt`
 - `review/native-kernel-kbuild.log`
 - `review/native-kernel-image-file.txt`
