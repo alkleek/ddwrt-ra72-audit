@@ -1,0 +1,57 @@
+name: "Phase 30: Build exact-model RA72 DTB through native DD-WRT kernel"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ddwrt_source_url:
+        description: "Public DD-WRT SVN source URL"
+        required: true
+        default: "svn://svn.dd-wrt.com/DD-WRT"
+        type: string
+      reference_repository:
+        description: "Verified GPL repository containing the current RA72 DTS"
+        required: true
+        default: "https://github.com/openwrt/openwrt.git"
+        type: string
+      reference_ref:
+        description: "Verified reference branch"
+        required: true
+        default: "openwrt-25.12"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-dtb:
+    name: "Phase 30 exact-model native DD-WRT kernel RA72 DTB build"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    env:
+      DDWRT_SOURCE_URL: ${{ inputs.ddwrt_source_url }}
+      REFERENCE_REPOSITORY: ${{ inputs.reference_repository }}
+      REFERENCE_REF: ${{ inputs.reference_ref }}
+
+    steps:
+      - name: Check out DD-WRT RA72 project
+        uses: actions/checkout@v4
+
+      - name: Install native kernel build and device-tree tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            bc bison build-essential curl device-tree-compiler flex \
+            gcc-aarch64-linux-gnu git libelf-dev libssl-dev patch \
+            python3 rsync subversion
+
+      - name: Build the exact-model RA72 DTB through native DD-WRT Kbuild
+        run: bash scripts/port-phase30.sh
+
+      - name: Upload Phase 30 review artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase30-exact-model-native-dtb-build
+          path: phase30-output/
+          if-no-files-found: warn
+          retention-days: 30
