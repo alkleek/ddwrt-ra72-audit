@@ -1,56 +1,58 @@
-# DD-WRT source audit for Xiaomi Mi AIoT AX6000 RA72
+# DD-WRT RA72 Phase 22
 
-## Phase 21 - build-contract reconstruction
+This repository update performs a temporary, review-only source integration
+for the exact **Xiaomi Mi AIoT AX6000, model RA72**.
 
-This repository is a private, source-only investigation for the:
+## Exact device
 
-- **Xiaomi Mi AIoT AX6000**
-- model **RA72**
-- Qualcomm **IPQ5018**
-- board configuration **MP03.1**
+- Xiaomi Mi AIoT AX6000
+- Model: RA72
+- SoC: Qualcomm IPQ5018
+- Board family: MP03.1
 
-It is not for the Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
+It is **not** for the Xiaomi Mi Router AX6000 (IPQ8072A), and it is not for the
+Redmi AX6000 (MediaTek). The DD-WRT project may use the upstream compatible
+string `xiaomi,ax6000`; in this project that compatible refers only to RA72.
 
-Phase 20 established that the public DD-WRT tree already builds IPQ5018
-root filesystems and contains real MR5500/MX5500 image recipes in:
+## What Phase 22 does
 
-`src/router/Makefile.ipq60xx`
+Phase 22:
 
-Phase 21 extracts the reusable parts of that integration and reconstructs a
-review-only RA72 build contract. It verifies:
+1. obtains the public DD-WRT IPQ5018 kernel/device-tree source;
+2. imports the verified GPL RA72 board DTS as a reference;
+3. supplies the exact Q6 reserved-memory nodes required by the DD-WRT base;
+4. registers `ipq5018-xiaomi-ra72.dtb` in the DD-WRT Qualcomm DTS Makefile;
+5. inserts the Phase 21 review recipe into a temporary
+   `src/router/Makefile.ipq60xx`;
+6. preprocesses, compiles, decompiles, and round-trip compiles the RA72 DTS;
+7. generates a unified source patch and validates that it applies cleanly.
 
-- the `root.ipq5018` root filesystem path;
-- the IPQ5018 FIT/ITB construction pattern;
-- UBI generation with 128 KiB eraseblocks and 2048-byte minimum I/O;
-- support for a UBI image containing both kernel and rootfs;
-- separation from Linksys headers, checksums, and TRX wrapping.
+## Safety boundary
 
-The generated RA72 recipe is source text for review. It is not inserted into
-DD-WRT and is not executed.
+This phase does **not** build DD-WRT firmware.
+
+- No UBI, BIN, ITB firmware, or sysupgrade file is produced.
+- No router is contacted.
+- No SSH, UART, NAND, boot flag, or flash command is used.
+- The generated patch remains review-only and is not hardware-approved.
 
 ## Run
 
-1. Upload this update to the existing GitHub repository.
-2. Open **Actions**.
-3. Select:
+In GitHub, open **Actions** and select:
 
-   `Phase 21: Reconstruct DD-WRT build contract for RA72`
+`Phase 22: Integrate and compile DD-WRT RA72 source patch`
 
-4. Select **Run workflow**.
-5. Keep the default DD-WRT source URL.
-6. Download the artifact:
+Press **Run workflow**, then download:
 
-   `ddwrt-ra72-phase21-build-contract-reconstruction`
+`ddwrt-ra72-phase22-source-integration-compile`
 
-## Send back for analysis
+Send back these files:
 
-- `REPORT-PHASE21.txt`
-- `review/phase21-status.txt`
-- `review/phase21-contract-checks.txt`
-- `review/ra72-image-recipe-review.mk`
-- `review/reference-ubi-kernel-blocks.txt`
+- `REPORT-PHASE22.txt`
+- `review/phase22-status.txt`
+- `review/phase22-integration-checks.txt`
+- `review/compile-status.txt`
+- `review/dtc-compile.log`
+- `patches/0001-ddwrt-add-xiaomi-mi-aiot-ax6000-ra72-review.patch`
 
-## Safety
-
-This phase only reads public DD-WRT source and writes a non-executed recipe
-draft into the artifact. It builds no firmware and accesses no router.
+Do not flash anything produced by Phase 22.
