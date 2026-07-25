@@ -1,8 +1,8 @@
 # DD-WRT source audit for Xiaomi Mi AIoT AX6000 RA72
 
-## Phase 20 - platform integration map
+## Phase 21 - build-contract reconstruction
 
-This repository is a private, audit-only investigation for the:
+This repository is a private, source-only investigation for the:
 
 - **Xiaomi Mi AIoT AX6000**
 - model **RA72**
@@ -11,20 +11,22 @@ This repository is a private, audit-only investigation for the:
 
 It is not for the Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-Phase 19 proved that the public DD-WRT source contains IPQ5018 components
-and Device Trees, but no complete IPQ5018 build template was identified by
-path-only classification.
+Phase 20 established that the public DD-WRT tree already builds IPQ5018
+root filesystems and contains real MR5500/MX5500 image recipes in:
 
-Phase 20 retrieves the contents of the closest public integration files and
-maps the relationship between:
+`src/router/Makefile.ipq60xx`
 
-- `src/router/Makefile.ipq60xx`;
-- the `src/router/configs/ipq60xx` configurations;
-- IPQ5018 kernel configurations and Device Trees;
-- the known IPQ5018 reference devices in the public tree.
+Phase 21 extracts the reusable parts of that integration and reconstructs a
+review-only RA72 build contract. It verifies:
 
-This phase answers which existing DD-WRT platform family is the safest
-foundation for a future RA72 build target. It does not create that target yet.
+- the `root.ipq5018` root filesystem path;
+- the IPQ5018 FIT/ITB construction pattern;
+- UBI generation with 128 KiB eraseblocks and 2048-byte minimum I/O;
+- support for a UBI image containing both kernel and rootfs;
+- separation from Linksys headers, checksums, and TRX wrapping.
+
+The generated RA72 recipe is source text for review. It is not inserted into
+DD-WRT and is not executed.
 
 ## Run
 
@@ -32,23 +34,23 @@ foundation for a future RA72 build target. It does not create that target yet.
 2. Open **Actions**.
 3. Select:
 
-   `Phase 20: Map DD-WRT IPQ5018 platform integration for RA72`
+   `Phase 21: Reconstruct DD-WRT build contract for RA72`
 
 4. Select **Run workflow**.
 5. Keep the default DD-WRT source URL.
 6. Download the artifact:
 
-   `ddwrt-ra72-phase20-platform-integration-map`
+   `ddwrt-ra72-phase21-build-contract-reconstruction`
 
 ## Send back for analysis
 
-- `REPORT-PHASE20.txt`
-- `review/phase20-status.txt`
-- `review/phase20-counts.txt`
-- `review/platform-foundation-ranking.txt`
-- `review/reference-device-build-links.txt`
+- `REPORT-PHASE21.txt`
+- `review/phase21-status.txt`
+- `review/phase21-contract-checks.txt`
+- `review/ra72-image-recipe-review.mk`
+- `review/reference-ubi-kernel-blocks.txt`
 
 ## Safety
 
-This phase only reads public DD-WRT source. It does not build firmware,
-does not access the router, and produces nothing flashable.
+This phase only reads public DD-WRT source and writes a non-executed recipe
+draft into the artifact. It builds no firmware and accesses no router.
