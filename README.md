@@ -1,11 +1,8 @@
-# DD-WRT RA72 Phase 34
+# DD-WRT RA72 Phase 35
 
-Phase 33 successfully built and staged 322 native ARM64 kernel modules,
-including the QCA8337/QCA8K switch, QCOM PPE, and IPQ9574 PCS modules.
-
-Phase 34 verifies the next packaging layer: a review-only FIT/ITB container
-holding the native RA72 kernel and exact-model Device Tree. The workflow
-extracts both payloads again and byte-compares them with their inputs.
+Phase 34 successfully created and verified the review-only RA72 FIT kernel
+container. Phase 35 now performs the first accelerated native DD-WRT
+userspace/rootfs build attempt.
 
 ## Exact device
 
@@ -15,12 +12,21 @@ extracts both payloads again and byte-compares them with their inputs.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
+## What is accelerated
+
+One workflow run now performs source pinning, source export, native target
+discovery, toolchain-contract capture, an actual userspace build,
+`root.ipq5018` discovery, SquashFS extraction, web-interface checks, ARM64
+checks, and automatic failure classification.
+
+If it is blocked, the resulting artifact should tell us the exact next fix
+without adding several separate audit phases.
+
 ## Safety
 
-The ITB produced by this phase is not complete DD-WRT firmware. It contains
-no rootfs, DD-WRT userspace, module package, UBI, factory image, or upgrade
-image. It is not boot-approved or flash-approved. Do not load it into
-U-Boot and do not transfer it to the router.
+The workflow never contacts the router. UBI/final-firmware packaging is
+disabled. A rootfs produced by this phase is only a review component and
+must not be booted or flashed.
 
 ## Upload
 
@@ -31,27 +37,31 @@ the folders exactly as provided, including `.github`.
 
 In GitHub **Actions**, select:
 
-`Phase 34: Build review-only RA72 FIT kernel container`
+`Phase 35: Build DD-WRT RA72 userspace rootfs`
 
-Press **Run workflow** and leave all three fields unchanged.
+Press **Run workflow** and leave both fields unchanged.
 
-Phase 34 reproduces Phase 33 first, so a run can take approximately as long
-as Phase 33 plus a few minutes.
+This is a large source and userspace build. It may run for one to several
+hours. A red result is still useful because the artifact is uploaded
+unconditionally.
 
 Download the artifact:
 
-`ddwrt-ra72-phase34-fit-kernel-container-build`
+`ddwrt-ra72-phase35-userspace-rootfs-build`
 
 Send back:
 
-- `REPORT-PHASE34.txt`
-- `review/phase34-status.txt`
-- `review/fit-build-status.txt`
-- `review/phase34-integration-checks.txt`
-- `review/fit-image-list.txt`
-- `review/fit-payload-comparison.txt`
-- `review/fit-structure.txt`
-- `review/fit-build.log`
-- `review/fit-extraction.log`
+- `REPORT-PHASE35.txt`
+- `review/phase35-status.txt`
+- `review/userspace-build-status.txt`
+- `review/build-failure-classification.txt`
+- `review/userspace-build-tail.txt`
+- `review/userspace-toolchain-contract.txt`
+- `review/make-targets.txt`
+- `review/selected-make-target.txt`
+- `review/source-summary.txt`
+- `review/phase35-integration-checks.txt` if present
+- `review/rootfs-superblock.txt` if present
+- `review/rootfs-busybox-type.txt` if present
 
-Do not boot, load, or flash any Phase 34 output.
+Do not boot or flash any Phase 35 output.
