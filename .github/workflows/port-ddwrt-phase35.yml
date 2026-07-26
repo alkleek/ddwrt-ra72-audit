@@ -1,0 +1,57 @@
+name: "Phase 35: Build DD-WRT RA72 userspace rootfs"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ddwrt_source_url:
+        description: "Public DD-WRT SVN source URL"
+        required: true
+        default: "svn://svn.dd-wrt.com/DD-WRT"
+        type: string
+      build_target:
+        description: "Make target; keep auto unless diagnosing a later run"
+        required: true
+        default: "auto"
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build-userspace-rootfs:
+    name: "Phase 35 accelerated DD-WRT RA72 userspace/rootfs build"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 420
+    env:
+      DDWRT_SOURCE_URL: ${{ inputs.ddwrt_source_url }}
+      DDWRT_BUILD_TARGET: ${{ inputs.build_target }}
+
+    steps:
+      - name: Check out DD-WRT RA72 project
+        uses: actions/checkout@v4
+
+      - name: Install userspace and rootfs build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            autoconf automake autopoint bc bison build-essential bzip2 \
+            ccache cmake cpio curl device-tree-compiler file flex gawk \
+            gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gettext git gperf \
+            intltool libarchive-tools libelf-dev liblz4-tool liblzma-dev \
+            libncurses-dev libssl-dev libtool libtool-bin m4 meson \
+            ninja-build patch pkg-config python3 python3-setuptools rsync \
+            squashfs-tools subversion texinfo u-boot-tools unzip uuid-dev \
+            wget xz-utils zlib1g-dev zstd
+
+      - name: Build and inspect DD-WRT RA72 userspace/rootfs
+        run: bash scripts/port-phase35.sh
+
+      - name: Upload Phase 35 review artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase35-userspace-rootfs-build
+          path: phase35-output/
+          if-no-files-found: warn
+          retention-days: 30
