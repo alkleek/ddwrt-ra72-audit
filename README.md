@@ -1,8 +1,7 @@
-# DD-WRT RA72 Phase 35
+# DD-WRT RA72 Phase 36
 
-Phase 34 successfully created and verified the review-only RA72 FIT kernel
-container. Phase 35 now performs the first accelerated native DD-WRT
-userspace/rootfs build attempt.
+This is the corrected accelerated userspace/rootfs build following the
+Phase 35 script-control failure.
 
 ## Exact device
 
@@ -12,56 +11,46 @@ userspace/rootfs build attempt.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## What is accelerated
+## What changed
 
-One workflow run now performs source pinning, source export, native target
-discovery, toolchain-contract capture, an actual userspace build,
-`root.ipq5018` discovery, SquashFS extraction, web-interface checks, ARM64
-checks, and automatic failure classification.
+- The failed diagnostic dry run can no longer stop the workflow.
+- The actual native DD-WRT build now starts even when dry-run expansion
+  returns a non-zero diagnostic code.
+- Build failures are captured and classified instead of being converted
+  into `BLOCKED_UNEXPECTED_ERROR`.
+- The separate kernel source export is skipped to preserve runner space;
+  the verified kernel work remains covered by Phases 30–34.
 
-If it is blocked, the resulting artifact should tell us the exact next fix
-without adding several separate audit phases.
+## Upload and run
 
-## Safety
+1. Upload this update over the existing GitHub repository.
+2. Keep `.github` and all folder paths.
+3. Commit the changes.
+4. Open **Actions**.
+5. Select:
 
-The workflow never contacts the router. UBI/final-firmware packaging is
-disabled. A rootfs produced by this phase is only a review component and
-must not be booted or flashed.
+   `Phase 36: Build corrected DD-WRT RA72 userspace rootfs`
 
-## Upload
+6. Press **Run workflow** and leave both fields unchanged.
 
-Upload the contents of this update over the existing GitHub project. Keep
-the folders exactly as provided, including `.github`.
+The actual build can take one to several hours. A red result still uploads
+the diagnostic artifact.
 
-## Run
+Download:
 
-In GitHub **Actions**, select:
-
-`Phase 35: Build DD-WRT RA72 userspace rootfs`
-
-Press **Run workflow** and leave both fields unchanged.
-
-This is a large source and userspace build. It may run for one to several
-hours. A red result is still useful because the artifact is uploaded
-unconditionally.
-
-Download the artifact:
-
-`ddwrt-ra72-phase35-userspace-rootfs-build`
+`ddwrt-ra72-phase36-corrected-userspace-rootfs-build`
 
 Send back:
 
-- `REPORT-PHASE35.txt`
-- `review/phase35-status.txt`
+- `REPORT-PHASE36.txt`
+- `review/phase36-status.txt`
 - `review/userspace-build-status.txt`
 - `review/build-failure-classification.txt`
 - `review/userspace-build-tail.txt`
 - `review/userspace-toolchain-contract.txt`
-- `review/make-targets.txt`
-- `review/selected-make-target.txt`
 - `review/source-summary.txt`
-- `review/phase35-integration-checks.txt` if present
+- `review/phase36-integration-checks.txt` if present
 - `review/rootfs-superblock.txt` if present
 - `review/rootfs-busybox-type.txt` if present
 
-Do not boot or flash any Phase 35 output.
+Do not boot or flash any Phase 36 output.
