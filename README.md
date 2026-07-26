@@ -1,8 +1,8 @@
-# DD-WRT RA72 Phase 43
+# DD-WRT RA72 Phase 44
 
-Phase 43 restores the canonical DD-WRT header tree required by the
-native IPQ60xx userspace build, then resumes the configure, bootstrap,
-compile, and rootfs stages.
+Phase 44 derives an exact RA72 wireless userspace profile from the
+nearest native DD-WRT IPQ6018 configuration, then resumes the native
+configure, bootstrap, compile, and rootfs stages.
 
 ## Exact device
 
@@ -12,33 +12,33 @@ compile, and rootfs stages.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 42 result
+## Phase 43 result
 
 The official AArch64 uClibc-compatible toolchain passed its ARM64
-compile test. The corrected source layout and early kernel configuration
-contracts passed. The native configure stage generated the real
-`jansson/Makefile`, and Jansson compiled successfully. The configure
-stage then reached `libutils` and stopped at:
+compile test. The public `src/include.v24` tree was exported, five real
+`typedefs.h` candidates were found, and the selected header passed
+preprocessing. The previous missing-header error was therefore fixed.
 
-`fatal error: typedefs.h: No such file or directory`
+The native configure stage then compiled Jansson, wireless-tools, and
+most of libutils before stopping at:
 
-This identifies a missing DD-WRT source export rather than a Jansson or
-toolchain failure. The header is supplied by the public
-`src/include.v24` tree used by DD-WRT's router build.
+`No rule to make target .../register/register_check.o`
 
-## Phase 43 corrections
+The selected base profile enabled legacy `CONFIG_MADWIFI=y`. That
+legacy stack requests registration objects not present in the public
+source and is not the wireless driver used by RA72.
 
-- Preserves every verified Phase 42 source and toolchain correction.
-- Exports canonical public `src/include.v24` at the same pinned SVN
-  revision as all other DD-WRT sources.
-- Requires a real `typedefs.h`; no generated or fabricated replacement
-  header is permitted.
-- Preprocesses `typedefs.h` with the selected DD-WRT AArch64 uClibc
-  compiler before the native build starts.
-- Records the exact header consumers and include-path contract.
+## Phase 44 corrections
+
+- Preserves every verified Phase 43 source, header, and toolchain fix.
+- Starts from the native IPQ6018 configuration and records it unchanged.
+- Derives a transparent RA72 profile that enables `CONFIG_ATH11K=y`.
+- Explicitly disables MADWIFI, ATH9K, ATH10K, REGISTER,
+  SUPERCHANNEL, and the legacy QCA98xx radio selections.
+- Records the complete configuration diff and final wireless contract.
+- Never fabricates `register_check.o` or substitutes proprietary code.
 - Runs native configure, sequential bootstrap, compile, and install.
-- Classifies configure failures separately and retains the first useful
-  error lines if another dependency is uncovered.
+- Classifies any later configure or build failure separately.
 - Searches only verified SquashFS rootfs candidates.
 - Keeps every Qualcomm UBI/flash packaging path disabled.
 
@@ -50,20 +50,26 @@ toolchain failure. The header is supplied by the public
 4. Open **Actions**.
 5. Select:
 
-   `Phase 43: Restore DD-WRT headers and build RA72 rootfs`
+   `Phase 44: Apply RA72 wireless profile and build rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged.
 
 Download this artifact when the run stops:
 
-`ddwrt-ra72-phase43-ddwrt-header-tree-rootfs-build`
+`ddwrt-ra72-phase44-ra72-wireless-profile-rootfs-build`
 
 Send back the complete downloaded artifact ZIP. The most useful files
 inside it are:
 
-- `REPORT-PHASE43.txt`
-- `review/phase43-status.txt`
+- `REPORT-PHASE44.txt`
+- `review/phase44-status.txt`
+- `review/base-ipq60xx.config`
+- `review/selected-ipq60xx.config`
+- `review/ra72-wireless-profile.patch`
+- `review/ra72-wireless-profile-contract.txt`
+- `review/ra72-wireless-profile-changes.txt`
+- `review/register-source-inventory.txt`
 - `review/ddwrt-header-tree-contract.txt`
 - `review/typedefs-header-candidates.txt`
 - `review/typedefs-preprocess.log`
@@ -82,7 +88,7 @@ inside it are:
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase43-integration-checks.txt` if present
+- `review/phase44-integration-checks.txt` if present
 
 ## Safety
 
