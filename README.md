@@ -1,8 +1,7 @@
-# DD-WRT RA72 Phase 45
+# DD-WRT RA72 Phase 46
 
-Phase 45 generates the verified DD-WRT SVN revision metadata that was
-missing in Phase 44, then resumes the native configure, bootstrap,
-compile, install, and rootfs-discovery stages.
+Phase 46 fixes the first blocker found in Phase 45, then continues the
+native DD-WRT configure, bootstrap, userspace, and rootfs build.
 
 ## Exact device
 
@@ -12,39 +11,41 @@ compile, install, and rootfs-discovery stages.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 44 result
+## Verified Phase 45 result
 
-The exact RA72 profile enabled `CONFIG_ATH11K=y` and disabled the
-incompatible legacy MADWIFI, ATH9K, ATH10K, registration, superchannel,
-and QCA98xx selections. The former `register_check.o` dependency
-disappeared, and the native configure build progressed through Jansson,
-wireless-tools, and into `libutils`.
+All four generated `revision.h` files matched the pinned public DD-WRT
+SVN revision `65774`. The missing-revision-header error disappeared.
 
-The first real blocker was then:
+PCRE 8.41 then successfully built these production libraries:
 
-`libutils/utils.c:1536:10: fatal error: revision.h: No such file or directory`
+- `libpcre`
+- `libpcreposix`
+- `libpcrecpp`
 
-This is generated DD-WRT build metadata, not device-specific source.
-The public SVN export does not contain working-copy metadata from which
-the normal build procedure can derive the header automatically.
+The configure stage stopped only while linking three cross-compiled
+PCRE unit-test executables. Their linker could not resolve the indirect
+`libpcre.so.1` dependency of `libpcrecpp.so`. These test executables are
+not runtime components of the RA72 rootfs.
 
-## Phase 45 correction
+## Phase 46 correction
 
-- Preserves every verified Phase 44 source, toolchain, header, and RA72
-  wireless-profile correction.
-- Obtains the exact pinned source revision with `svn info`.
-- Generates the native one-line DD-WRT revision header:
+- Preserves the pinned source revision, official DD-WRT toolchain,
+  exact RA72 ATH11K profile, native header tree, and revision metadata.
+- Patches only the `pcre` recipe in `src/router/rules/pcre.mk`.
+- Requests exactly the three production library targets:
+  `libpcre.la`, `libpcreposix.la`, and `libpcrecpp.la`.
+- Does not request nonlibrary PCRE programs during this configure
+  prerequisite; in particular, it excludes the three failing
+  `pcrecpp_unittest`, `pcre_scanner_unittest`, and
+  `pcre_stringpiece_unittest` targets.
+- Saves the original and patched rule, a unified diff, the selected
+  targets, resulting libraries, and a machine-readable contract.
+- Stops immediately if the expected PCRE recipe is not found exactly
+  once or if any required production library is missing.
+- Keeps Qualcomm UBI and every flash/deployment path disabled.
 
-  `#define SVN_REVISION "<verified revision>"`
-
-- Installs that same verified header in the four native consumers:
-  `libutils`, `shared`, `httpd`, and `httpd/visuals`.
-- Verifies every generated copy byte-for-byte before compilation.
-- Records the revision value, consumers, paths, and SHA-256 hashes in
-  the review artifact.
-- Adds a dedicated missing-revision-header failure classifier.
-- Never guesses a revision number and never substitutes unrelated code.
-- Keeps every Qualcomm UBI/flash packaging path disabled.
+This is a narrow build correction. It does not claim that DD-WRT is
+ready to boot on RA72.
 
 ## Upload and run
 
@@ -54,28 +55,24 @@ the normal build procedure can derive the header automatically.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 45: Generate verified revision metadata and build rootfs`
+   `Phase 46: Build PCRE libraries only and continue rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged.
 
 Download this artifact when the run stops:
 
-`ddwrt-ra72-phase45-revision-metadata-rootfs-build`
+`ddwrt-ra72-phase46-pcre-library-only-rootfs-build`
 
 Send back the complete downloaded artifact ZIP. The most useful files
 inside it are:
 
-- `REPORT-PHASE45.txt`
-- `review/phase45-status.txt`
-- `review/revision-header-contract.txt`
-- `review/revision-header-paths.txt`
-- `review/revision-header-consumers.txt`
-- `review/revision-header-sha256.txt`
-- `review/base-ipq60xx.config`
-- `review/selected-ipq60xx.config`
-- `review/ra72-wireless-profile.patch`
-- `review/ra72-wireless-profile-contract.txt`
+- `REPORT-PHASE46.txt`
+- `review/phase46-status.txt`
+- `review/pcre-production-targets.txt`
+- `review/pcre-library-only.patch`
+- `review/pcre-built-libraries.txt`
+- `review/pcre-library-contract.txt`
 - `review/configure-failure-classification.txt`
 - `review/first-configure-errors.txt`
 - `review/ddwrt-configure-tail.txt`
@@ -85,10 +82,10 @@ inside it are:
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase45-integration-checks.txt` if present
+- `review/phase46-integration-checks.txt` if present
 
 ## Safety
 
-This workflow never contacts the router. It does not produce an
-approved firmware image. Any rootfs is a review-only component and must
-not be booted or flashed.
+This workflow never contacts the router. It does not produce approved
+firmware. Any SquashFS rootfs is a review-only component and must not
+be booted or flashed.
