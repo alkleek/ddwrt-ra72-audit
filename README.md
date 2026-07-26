@@ -1,8 +1,8 @@
-# DD-WRT RA72 Phase 41
+# DD-WRT RA72 Phase 42
 
-Phase 41 resolves the first two real source-layout blockers found after
-Phase 40 successfully downloaded, extracted, tested, and used the
-official DD-WRT AArch64 toolchain.
+Phase 42 resolves the native package-configuration blocker found after
+Phase 41 corrected the source layout and reached real DD-WRT package
+compilation.
 
 ## Exact device
 
@@ -12,23 +12,30 @@ official DD-WRT AArch64 toolchain.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 40 result
+## Phase 41 result
 
-The official toolchain passed its ARM64 compile test and the native
-DD-WRT build started. It stopped at the first preparation rule because:
+The official AArch64 uClibc-compatible toolchain passed its ARM64
+compile test. The corrected `opt`, `tools`, and early kernel
+configuration contracts all passed. The build then successfully built
+`nvram`, `wireless-tools`, and `libnl-tiny` before stopping at:
 
-- the repository-level `opt` tree had not been exported, so
-  `src/router/opt/etc/config/*.webconfig` was unavailable;
-- `linux-6.12-nss/.config` was read before the later kernel rule copied
-  `.config_ipq6018` into place.
+`make -C jansson`
 
-## Phase 41 corrections
+The `jansson` source directory existed, but its generated `Makefile`
+did not, proving that the native DD-WRT configure stage must run before
+the `all` stage.
 
-- Exports `opt` and `tools` from the same pinned DD-WRT SVN revision.
-- Resolves and records the `src/router/opt` topology.
-- Requires real DD-WRT `*.webconfig` files; it creates no placeholders.
-- Copies the native `.config_ipq6018` before any userspace rule reads it.
+## Phase 42 corrections
+
+- Preserves all source and toolchain corrections from Phase 41.
+- Runs the native `Makefile.ipq60xx configure` stage first.
+- Verifies that the real `jansson/Makefile` was generated.
+- Uses `jansson-configure` only as a native fallback if needed.
+- Sequentially bootstraps `nvram`, `jansson`, and `utils`.
 - Runs the native compile stage and then the native install/rootfs stage.
+- Captures complete configure, bootstrap, and userspace logs.
+- Correctly inventories `opt` without following its intentionally
+  unresolved firmware-only symlinks.
 - Searches verified SquashFS candidates named `root.ipq5018`,
   `root.ipq60xx`, or `root.fs`.
 - Keeps every Qualcomm UBI/flash packaging path disabled.
@@ -41,28 +48,33 @@ DD-WRT build started. It stopped at the first preparation rule because:
 4. Open **Actions**.
 5. Select:
 
-   `Phase 41: Resolve source opt and build DD-WRT RA72 rootfs`
+   `Phase 42: Resolve configure and bootstrap DD-WRT RA72 rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged.
 
 Download this artifact when the run stops:
 
-`ddwrt-ra72-phase41-source-opt-kernel-config-rootfs-build`
+`ddwrt-ra72-phase42-configure-bootstrap-rootfs-build`
 
 Send back the complete downloaded artifact ZIP. The most useful files
 inside it are:
 
-- `REPORT-PHASE41.txt`
-- `review/phase41-status.txt`
+- `REPORT-PHASE42.txt`
+- `review/phase42-status.txt`
 - `review/source-layout-contract.txt`
-- `review/opt-resolution.txt`
-- `review/webconfig-contract.txt`
+- `review/configure-stage-status.txt`
+- `review/ddwrt-configure-tail.txt`
+- `review/bootstrap-stage-status.txt`
+- `review/ddwrt-bootstrap-build-tail.txt`
+- `review/jansson-rule.mk`
+- `review/jansson-before-configure.txt`
+- `review/jansson-after-configure.txt`
 - `review/userspace-build-status.txt`
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase41-integration-checks.txt` if present
+- `review/phase42-integration-checks.txt` if present
 
 ## Safety
 
