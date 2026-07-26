@@ -1,7 +1,8 @@
-# DD-WRT RA72 Phase 39
+# DD-WRT RA72 Phase 40
 
-Phase 39 replaces the long single-stream toolchain download with a
-segmented and automatically resumed download.
+Phase 40 corrects the selective extraction of the official DD-WRT
+AArch64 toolchain and then continues into the native userspace/rootfs
+build.
 
 ## Exact device
 
@@ -11,25 +12,28 @@ segmented and automatically resumed download.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 38 finding
+## Phase 39 result
 
-The official DD-WRT server repeatedly closed each long transfer after a
-small portion. Phase 38 proved that byte-range resume works and reached
-about 435 MB, but one curl/wget connection was not sufficient to finish
-the 4.1 GB archive. The DD-WRT source build did not start.
+Phase 39 successfully:
 
-## Phase 39 correction
+- downloaded the complete official toolchain archive using aria2;
+- indexed the valid XZ/TAR archive;
+- found the current Cortex-A53 AArch64 toolchain;
+- found its compatibility command
+  `aarch64-linux-uclibc-gcc`.
 
-- Uses `aria2c` with eight parallel range connections.
-- Divides the official archive into 4 MB pieces.
-- Retries and resumes individual pieces without restarting the archive.
-- Uses one bounded 180-minute download session.
-- Writes quiet one-minute summaries instead of thousands of progress
-  lines.
-- Verifies the completed archive before selecting and testing the native
-  `aarch64-linux-uclibc` compiler.
+It stopped because passing thousands of indexed member names back to
+`tar -T` did not match the archive's internal path normalization.
+The DD-WRT source build had not started.
 
-All Phase 37 build-environment corrections remain included.
+## Phase 40 correction
+
+- Keeps the segmented aria2 download.
+- Selects the same verified toolchain root.
+- Extracts that root as one recursive wildcard tree.
+- Matches the root regardless of an internal leading path prefix.
+- Captures only the final 500 extraction log lines on failure.
+- Tests the compiler before exporting and building DD-WRT.
 
 ## Upload and run
 
@@ -39,28 +43,27 @@ All Phase 37 build-environment corrections remain included.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 39: Build DD-WRT RA72 rootfs with segmented uClibc`
+   `Phase 40: Extract toolchain and build DD-WRT RA72 rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged.
 
 Download this artifact when the run stops:
 
-`ddwrt-ra72-phase39-segmented-uclibc-rootfs-build`
+`ddwrt-ra72-phase40-toolchain-extraction-rootfs-build`
 
 Send back:
 
-- `REPORT-PHASE39.txt`
-- `review/phase39-status.txt`
-- `review/toolchain-download-tail.txt`
-- `review/toolchain-archive-size.txt` if present
+- `REPORT-PHASE40.txt`
+- `review/phase40-status.txt`
+- `review/toolchain-extraction-tail.txt`
 - `review/selected-toolchain-contract.txt` if present
 - `review/toolchain-test-status.txt` if present
 - `review/userspace-build-status.txt` if present
 - `review/build-failure-classification.txt` if present
 - `review/first-build-errors.txt` if present
 - `review/userspace-build-tail.txt` if present
-- `review/phase39-integration-checks.txt` if present
+- `review/phase40-integration-checks.txt` if present
 
 ## Safety
 
