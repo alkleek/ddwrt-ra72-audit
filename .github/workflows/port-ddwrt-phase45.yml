@@ -1,0 +1,72 @@
+name: "Phase 45: Generate verified revision metadata and build rootfs"
+
+on:
+  workflow_dispatch:
+    inputs:
+      ddwrt_source_url:
+        description: "Public DD-WRT SVN source URL"
+        required: true
+        default: "svn://svn.dd-wrt.com/DD-WRT"
+        type: string
+      ddwrt_toolchain_url:
+        description: "Official DD-WRT toolchains archive"
+        required: true
+        default: "https://download1.dd-wrt.com/dd-wrtv2/downloads/toolchains/toolchains.tar.xz"
+        type: string
+      build_target:
+        description: "Make target; keep auto unless diagnosing a later run"
+        required: true
+        default: "auto"
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build-userspace-rootfs:
+    name: "Phase 45 verified RA72 revision-metadata and rootfs build"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      DDWRT_SOURCE_URL: ${{ inputs.ddwrt_source_url }}
+      DDWRT_TOOLCHAIN_URL: ${{ inputs.ddwrt_toolchain_url }}
+      DDWRT_BUILD_TARGET: ${{ inputs.build_target }}
+
+    steps:
+      - name: Check out DD-WRT RA72 project
+        uses: actions/checkout@v4
+
+      - name: Free space on the temporary GitHub runner
+        run: |
+          sudo rm -rf -- \
+            /usr/local/lib/android \
+            /usr/share/dotnet \
+            /opt/ghc \
+            /usr/local/share/boost
+          df -h
+
+      - name: Install userspace and rootfs build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            aria2 autoconf automake autopoint bc bison build-essential bzip2 \
+            ccache cmake cpio curl device-tree-compiler file flex gawk \
+            gettext git gperf intltool libarchive-tools libdeflate-tools \
+            libelf-dev liblz4-tool liblzma-dev libncurses-dev libssl-dev \
+            libtool libtool-bin m4 meson ninja-build patch perl pkg-config \
+            python3 python3-setuptools rsync squashfs-tools subversion \
+            texinfo u-boot-tools unzip uuid-dev wget xz-utils zip \
+            zlib1g-dev zstd
+
+      - name: Generate revision metadata and build RA72 userspace/rootfs
+        run: bash scripts/port-phase45.sh
+
+      - name: Upload Phase 45 review artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddwrt-ra72-phase45-revision-metadata-rootfs-build
+          path: phase45-output/
+          if-no-files-found: warn
+          retention-days: 30
