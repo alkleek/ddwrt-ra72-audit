@@ -1,7 +1,8 @@
-# DD-WRT RA72 Phase 37
+# DD-WRT RA72 Phase 38
 
-Phase 37 corrects the native DD-WRT userspace/rootfs build environment
-identified by the Phase 36 logs.
+Phase 38 resumes the native DD-WRT userspace/rootfs build after Phase 37
+was interrupted while downloading the official 4.1 GB toolchain archive.
+The build itself did not start in Phase 37.
 
 ## Exact device
 
@@ -11,22 +12,30 @@ identified by the Phase 36 logs.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## What Phase 37 changes
+## Download correction
 
-- Downloads the official DD-WRT toolchain archive on the temporary
-  GitHub Ubuntu runner.
-- Selects and tests the native `aarch64-linux-uclibc` compiler before
-  starting the large source build.
-- Exports the required DD-WRT `linux-6.12-nss` tree and passes its exact
-  path to `Makefile.ipq60xx`.
-- Selects the non-preflash MX4200 IPQ60xx configuration as the nearest
-  existing DD-WRT userspace build baseline.
-- Creates the missing `src/opt` build directory.
-- Adds `-fcommon` only to the host DD-WRT configuration utility to
-  resolve the modern-GCC `current_menu` link failure.
-- Executes the native DD-WRT rootfs target and validates
-  `root.ipq5018` if it is produced.
-- Uploads complete diagnostics even if the build fails.
+Phase 37 stopped on:
+
+`curl: (92) HTTP/2 stream 1 was not closed cleanly`
+
+Phase 38:
+
+- forces HTTP/1.1 instead of HTTP/2;
+- retains and resumes the partially downloaded archive;
+- retries transient errors automatically;
+- performs six resumable curl rounds;
+- falls back to resumable `wget` if curl cannot finish;
+- records every attempt and partial byte count in the review artifact.
+
+## Other build corrections retained
+
+- Uses and tests the official `aarch64-linux-uclibc` compiler.
+- Exports the DD-WRT `linux-6.12-nss` source tree.
+- Selects the non-preflash MX4200 IPQ60xx userspace configuration as
+  the closest existing DD-WRT baseline.
+- Creates the missing `src/opt` directory.
+- Adds `-fcommon` only to the host DD-WRT configuration utility.
+- Validates `root.ipq5018` if the native build produces it.
 
 ## Upload and run
 
@@ -36,31 +45,27 @@ It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 37: Build DD-WRT RA72 rootfs with native uClibc`
+   `Phase 38: Build DD-WRT RA72 rootfs with resumable uClibc`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged and confirm the run.
 
-The official toolchain archive is about 4.1 GB. Download, source export,
-and compilation can take one to several hours. A red result still uploads
-the diagnostic artifact.
-
 Download this artifact when the run stops:
 
-`ddwrt-ra72-phase37-native-uclibc-rootfs-build`
+`ddwrt-ra72-phase38-resumable-uclibc-rootfs-build`
 
 Send back:
 
-- `REPORT-PHASE37.txt`
-- `review/phase37-status.txt`
-- `review/selected-toolchain-contract.txt`
-- `review/toolchain-test-status.txt`
-- `review/userspace-build-status.txt`
-- `review/build-failure-classification.txt`
-- `review/first-build-errors.txt`
-- `review/userspace-build-tail.txt`
-- `review/source-summary.txt`
-- `review/phase37-integration-checks.txt` if present
+- `REPORT-PHASE38.txt`
+- `review/phase38-status.txt`
+- `review/toolchain-download-attempts.txt`
+- `review/selected-toolchain-contract.txt` if present
+- `review/toolchain-test-status.txt` if present
+- `review/userspace-build-status.txt` if present
+- `review/build-failure-classification.txt` if present
+- `review/first-build-errors.txt` if present
+- `review/userspace-build-tail.txt` if present
+- `review/phase38-integration-checks.txt` if present
 
 ## Safety
 
