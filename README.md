@@ -1,9 +1,9 @@
-# DD-WRT RA72 Phase 49
+# DD-WRT RA72 Phase 50
 
-Phase 49 adds the host `libltdl` development macro required by
-`dnscrypt` and continues the native DD-WRT configure, bootstrap,
-userspace, and rootfs build. It preserves the successful resumable
-toolchain download and libsodium correction from Phase 48.
+Phase 50 preconfigures `ncurses` through DD-WRT's native target before
+the full configure, bootstrap, userspace, and rootfs build. It preserves
+the successful resumable toolchain download, PCRE/libsodium corrections,
+and verified host `libltdl` macro from the preceding phases.
 
 ## Exact device
 
@@ -44,31 +44,36 @@ stopped because:
 libtoolize: error: '/usr/share/aclocal/ltdl.m4' does not exist.
 ```
 
-## Phase 49 correction
+## Verified Phase 49 result
+
+Ubuntu's `libltdl-dev` package supplied the missing macro and its
+machine-readable host contract passed. DD-WRT configuration advanced
+past `dnscrypt` and later stopped at:
+
+```text
+make -C ncurses
+make[1]: *** No targets specified and no makefile found. Stop.
+make: *** [rules/ncurses.mk:29: ncurses] Error 2
+```
+
+The failure means the native build requested `ncurses` before
+`src/router/ncurses/Makefile` had been generated.
+
+## Phase 50 correction
 
 - Preserves the pinned source revision, official DD-WRT toolchain,
   exact RA72 ATH11K profile, native header tree, and revision metadata.
-- Preserves the Phase 48 resumable download strategy and all verified
-  PCRE/libsodium corrections.
-- Installs Ubuntu's `libltdl-dev` package explicitly.
-- Verifies `/usr/share/aclocal/ltdl.m4` before downloading the large
-  toolchain or exporting the DD-WRT source.
-- Records the macro provider and SHA-256 hash in a machine-readable
-  contract.
-- Stops immediately with a specific status if the macro is unavailable.
-- Preserves and revalidates the narrow Phase 46 PCRE library-only patch.
-- Installs Ubuntu's `autotools-dev` package in the GitHub runner.
-- Patches only the libsodium configure chain in
-  `src/router/rules/sodium.mk`.
-- Runs libsodium's native `autogen.sh`, then replaces the downloaded
-  `config.guess` and `config.sub` with executable copies supplied by
-  Ubuntu before running `./configure`.
-- Verifies both helpers are executable, runs `config.guess`, and tests
-  `config.sub aarch64-linux-uclibc`.
-- Saves the original and patched sodium rule, a unified diff, helper
-  hashes and outputs, and a machine-readable contract.
-- Stops if the expected sodium chain is not found exactly once or any
-  helper check fails.
+- Preserves every verified PCRE, libsodium, and libltdl contract.
+- Saves the exact native `src/router/rules/ncurses.mk` used by the
+  pinned DD-WRT revision.
+- Requires the native `ncurses-configure` target to exist.
+- Runs that focused target before the full DD-WRT configure stage.
+- Requires a generated `src/router/ncurses/Makefile` before continuing.
+- Saves the focused log, its final 500 lines, before/after inventory,
+  generated Makefile hash, and a machine-readable contract.
+- Classifies recurrence of the Phase 49 failure explicitly.
+- Stops immediately with a focused status if ncurses cannot be
+  configured.
 - Keeps Qualcomm UBI and every flash/deployment path disabled.
 
 This is a narrow build correction. It does not claim that DD-WRT is
@@ -82,21 +87,27 @@ ready to boot on RA72.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 49: Add libltdl support and continue dnscrypt/rootfs`
+   `Phase 50: Preconfigure ncurses and continue DD-WRT rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged.
 
 Download this artifact when the run stops:
 
-`ddwrt-ra72-phase49-libltdl-dnscrypt-rootfs-build`
+`ddwrt-ra72-phase50-ncurses-preconfigure-rootfs-build`
 
 Send back the complete downloaded artifact ZIP. The most useful files
 inside it are:
 
-- `REPORT-PHASE49.txt`
-- `review/phase49-status.txt`
+- `REPORT-PHASE50.txt`
+- `review/phase50-status.txt`
 - `review/host-libltdl-contract.txt`
+- `review/ncurses-rule.mk`
+- `review/ncurses-before-preconfigure.txt`
+- `review/ncurses-after-preconfigure.txt`
+- `review/ncurses-preconfigure-contract.txt`
+- `review/ncurses-preconfigure-tail.txt`
+- `review/ncurses-preconfigure.log`
 - `review/toolchain-download-contract.txt`
 - `review/toolchain-download-attempts.txt`
 - `review/toolchain-download-tail.txt`
@@ -119,7 +130,7 @@ inside it are:
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase49-integration-checks.txt` if present
+- `review/phase50-integration-checks.txt` if present
 
 ## Safety
 
