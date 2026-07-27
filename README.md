@@ -1,15 +1,15 @@
-# DD-WRT RA72 Phase 53
+# DD-WRT RA72 Phase 54
 
-Phase 53 corrects the exact failure found by Phase 52:
+Phase 54 corrects the exact failure found by Phase 53:
 
 ```text
-meson.build:4:18: ERROR: Meson version is 1.3.2 but project requires >= 1.4.0
-make: *** [rules/glib.mk:140: glib20-configure] Error 1
+../include/linux/netfilter/nfnetlink.h:4:10: fatal error:
+linux/netfilter/nfnetlink_compat.h: No such file or directory
+make: *** [rules/nftables.mk:19: libnftnl] Error 2
 ```
 
-Phase 52 itself was successful in its intended correction: the
-`util-linux` unprivileged install completed, produced 349 staged files,
-and contained no active `chown root:root` or `chgrp tty` operations.
+Phase 53 itself passed its intended Meson correction. The isolated
+Meson `1.4.2` was active and satisfied GLib's minimum `1.4.0`.
 
 This remains a review-only userspace/rootfs build. It does not create
 approved firmware and must not be flashed.
@@ -22,23 +22,26 @@ approved firmware and must not be flashed.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 53 correction
+## Phase 54 correction
 
 The workflow:
 
-1. installs Python virtual-environment support on the GitHub runner;
-2. creates a private Meson environment inside the temporary build area;
-3. installs exactly Meson `1.4.2`;
-4. verifies the executable, exact version, active path, SHA-256, and pip
-   provider before downloading the large DD-WRT source or toolchain;
-5. keeps the isolated Meson first in the effective build path;
-6. retains every correction and safety boundary from Phase 52;
-7. classifies an old-Meson failure explicitly if it ever reappears;
-8. continues the native DD-WRT RA72 userspace/rootfs build.
+1. exports the DD-WRT router and Linux 6.12 NSS trees from the same
+   pinned public SVN revision;
+2. requires the canonical UAPI source header:
+   `src/linux/universal/linux-6.12-nss/include/uapi/linux/netfilter/nfnetlink_compat.h`;
+3. materializes that header at the location used by DD-WRT userspace:
+   `src/router/kernel_headers/include/linux/netfilter/nfnetlink_compat.h`;
+4. verifies source and destination paths, revision, SHA-256 hashes,
+   byte identity, and include guard;
+5. records the complete result in
+   `review/nfnetlink-compat-header-contract.txt`;
+6. retains the Meson and all earlier corrections;
+7. continues the native DD-WRT RA72 userspace/rootfs build.
 
-Version `1.4.2` is the nearest stable Meson release selected above GLib's
-minimum `1.4.0`, reducing avoidable behavior drift from much newer
-versions.
+The header is not downloaded from an unrelated project or kernel. It is
+copied from the Linux source exported at the exact DD-WRT revision used
+by the same run.
 
 ## Upload and run
 
@@ -48,38 +51,36 @@ versions.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 53: Pin compatible Meson and build rootfs`
+   `Phase 54: Restore nfnetlink compat header and build rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged and run it.
 
 Download this artifact after the run stops:
 
-`ddwrt-ra72-phase53-pinned-host-meson-rootfs-build`
+`ddwrt-ra72-phase54-nfnetlink-compat-header-rootfs-build`
 
 Send back the complete downloaded artifact ZIP.
 
 ## Most useful review files
 
-- `REPORT-PHASE53.txt`
-- `review/phase53-status.txt`
-- `review/host-meson-contract.txt`
-- `review/host-meson-install.log`
-- `review/host-meson-install-tail.txt`
-- `review/userspace-build-environment.txt`
+- `REPORT-PHASE54.txt`
+- `review/phase54-status.txt`
+- `review/nfnetlink-compat-header-contract.txt`
 - `review/configure-failure-classification.txt`
 - `review/first-configure-errors.txt`
 - `review/ddwrt-configure-tail.txt`
 - `review/build-failure-classification.txt`
+- `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase53-integration-checks.txt` if produced
+- `review/phase54-integration-checks.txt` if produced
 
-The Phase 52 util-linux patch and focused-install evidence remain included
-in the artifact as well.
+The Phase 53 Meson contract and all earlier focused evidence remain
+included in the artifact.
 
 ## Safety
 
 - No router, SSH, UART, NAND partition, or boot variable is accessed.
 - Qualcomm UBI and all flash/deployment paths remain disabled.
 - A generated SquashFS file is only a review component.
-- Do not boot, load, install, deploy, or flash any Phase 53 file.
+- Do not boot, load, install, deploy, or flash any Phase 54 file.
