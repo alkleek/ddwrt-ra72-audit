@@ -1,9 +1,9 @@
-# DD-WRT RA72 Phase 50
+# DD-WRT RA72 Phase 51
 
-Phase 50 preconfigures `ncurses` through DD-WRT's native target before
-the full configure, bootstrap, userspace, and rootfs build. It preserves
-the successful resumable toolchain download, PCRE/libsodium corrections,
-and verified host `libltdl` macro from the preceding phases.
+Phase 51 installs and verifies the host `gtkdocize` tool, then
+preconfigures `util-linux` through DD-WRT's native target before the
+full configure, bootstrap, userspace, and rootfs build. It preserves all
+verified toolchain, PCRE, libsodium, libltdl, and ncurses contracts.
 
 ## Exact device
 
@@ -59,21 +59,35 @@ make: *** [rules/ncurses.mk:29: ncurses] Error 2
 The failure means the native build requested `ncurses` before
 `src/router/ncurses/Makefile` had been generated.
 
-## Phase 50 correction
+## Verified Phase 50 result
+
+The native `ncurses-configure` target existed, completed successfully,
+and generated a verified `src/router/ncurses/Makefile`. DD-WRT built
+ncurses and advanced to `util-linux`, where `autoreconf` stopped at:
+
+```text
+Can't exec "gtkdocize": No such file or directory
+autoreconf: error: gtkdocize failed with exit status: 2
+make: *** [rules/util-linux.mk:8: util-linux-configure] Error 2
+```
+
+## Phase 51 correction
 
 - Preserves the pinned source revision, official DD-WRT toolchain,
   exact RA72 ATH11K profile, native header tree, and revision metadata.
-- Preserves every verified PCRE, libsodium, and libltdl contract.
-- Saves the exact native `src/router/rules/ncurses.mk` used by the
-  pinned DD-WRT revision.
-- Requires the native `ncurses-configure` target to exist.
-- Runs that focused target before the full DD-WRT configure stage.
-- Requires a generated `src/router/ncurses/Makefile` before continuing.
-- Saves the focused log, its final 500 lines, before/after inventory,
-  generated Makefile hash, and a machine-readable contract.
-- Classifies recurrence of the Phase 49 failure explicitly.
-- Stops immediately with a focused status if ncurses cannot be
-  configured.
+- Preserves and revalidates the successful Phase 50 ncurses contract.
+- Installs Ubuntu's `gtk-doc-tools` package explicitly.
+- Verifies `/usr/bin/gtkdocize` before downloading the large toolchain.
+- Records the tool's package provider, version, SHA-256 hash, and
+  executable status.
+- Saves the exact native `src/router/rules/util-linux.mk`.
+- Requires and runs DD-WRT's native `util-linux-configure` target before
+  the full configure stage.
+- Requires a generated `src/router/util-linux/Makefile` before
+  continuing.
+- Saves focused preconfigure/config logs, final 500 lines, before/after
+  inventory, generated Makefile hash, and a machine-readable contract.
+- Classifies recurrence of the Phase 50 gtkdocize failure explicitly.
 - Keeps Qualcomm UBI and every flash/deployment path disabled.
 
 This is a narrow build correction. It does not claim that DD-WRT is
@@ -87,20 +101,20 @@ ready to boot on RA72.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 50: Preconfigure ncurses and continue DD-WRT rootfs`
+   `Phase 51: Add gtkdocize and preconfigure util-linux`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged.
 
 Download this artifact when the run stops:
 
-`ddwrt-ra72-phase50-ncurses-preconfigure-rootfs-build`
+`ddwrt-ra72-phase51-gtkdocize-util-linux-rootfs-build`
 
 Send back the complete downloaded artifact ZIP. The most useful files
 inside it are:
 
-- `REPORT-PHASE50.txt`
-- `review/phase50-status.txt`
+- `REPORT-PHASE51.txt`
+- `review/phase51-status.txt`
 - `review/host-libltdl-contract.txt`
 - `review/ncurses-rule.mk`
 - `review/ncurses-before-preconfigure.txt`
@@ -108,6 +122,14 @@ inside it are:
 - `review/ncurses-preconfigure-contract.txt`
 - `review/ncurses-preconfigure-tail.txt`
 - `review/ncurses-preconfigure.log`
+- `review/host-gtkdocize-contract.txt`
+- `review/util-linux-rule.mk`
+- `review/util-linux-before-preconfigure.txt`
+- `review/util-linux-after-preconfigure.txt`
+- `review/util-linux-preconfigure-contract.txt`
+- `review/util-linux-preconfigure-tail.txt`
+- `review/util-linux-preconfigure.log`
+- `review/util-linux-config.log` if present
 - `review/toolchain-download-contract.txt`
 - `review/toolchain-download-attempts.txt`
 - `review/toolchain-download-tail.txt`
@@ -130,7 +152,7 @@ inside it are:
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase50-integration-checks.txt` if present
+- `review/phase51-integration-checks.txt` if present
 
 ## Safety
 
