@@ -1,9 +1,11 @@
-# DD-WRT RA72 Phase 51
+# DD-WRT RA72 Phase 52
 
-Phase 51 installs and verifies the host `gtkdocize` tool, then
-preconfigures `util-linux` through DD-WRT's native target before the
-full configure, bootstrap, userspace, and rootfs build. It preserves all
-verified toolchain, PCRE, libsodium, libltdl, and ncurses contracts.
+Phase 52 corrects the first confirmed failure from Phase 51: the native
+`util-linux` install tried to run `chown root:root` and `chgrp tty` inside
+the unprivileged GitHub Actions runner.
+
+This is still a review-only userspace/rootfs build. It does not create
+approved firmware and must not be flashed.
 
 ## Exact device
 
@@ -13,149 +15,90 @@ verified toolchain, PCRE, libsodium, libltdl, and ncurses contracts.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Verified Phase 46 result
+## Verified Phase 51 result
 
-All four generated `revision.h` files matched the pinned public DD-WRT
-SVN revision `65774`. The missing-revision-header error disappeared.
+Phase 51 proved that:
 
-PCRE 8.41 then successfully built these production libraries:
+- the host `gtkdocize` contract passed;
+- DD-WRT's native `ncurses-configure` target passed;
+- DD-WRT's native `util-linux-configure` target passed;
+- `src/router/util-linux/Makefile` was generated;
+- the full configure advanced into the `util-linux` install.
 
-- `libpcre`
-- `libpcreposix`
-- `libpcrecpp`
-
-Phase 46 built all three PCRE production libraries and excluded only
-the three cross-compiled unit tests. Its complete machine-readable
-contract passed. Configuration then advanced to libsodium and stopped
-because its `autogen.sh` replacement `build-aux/config.sub` could not
-be executed.
-
-## Verified Phase 48 result
-
-The complete 4,217,788,956-byte official DD-WRT toolchain archive
-downloaded successfully on the first resumable attempt. Source export,
-toolchain selection, PCRE production libraries, and every libsodium
-configuration-helper check passed.
-
-Configuration then advanced into `dnscrypt`. Its nested `autoreconf`
-stopped because:
+The terminal failure was:
 
 ```text
-libtoolize: error: '/usr/share/aclocal/ltdl.m4' does not exist.
+chgrp tty .../usr/bin/wall
+chgrp: ... Operation not permitted
+chown root:root .../bin/mount
+chown: ... Operation not permitted
 ```
 
-## Verified Phase 49 result
+The Phase 51 classifier's `MISSING_HOST_GTKDOCIZE` result was a false
+positive caused by a harmless `gtk-doc ... not found` warning. Phase 52
+narrows that classifier to exact missing-executable messages.
 
-Ubuntu's `libltdl-dev` package supplied the missing macro and its
-machine-readable host contract passed. DD-WRT configuration advanced
-past `dnscrypt` and later stopped at:
+## Phase 52 correction
 
-```text
-make -C ncurses
-make[1]: *** No targets specified and no makefile found. Stop.
-make: *** [rules/ncurses.mk:29: ncurses] Error 2
-```
+The workflow:
 
-The failure means the native build requested `ncurses` before
-`src/router/ncurses/Makefile` had been generated.
+1. saves the original `src/router/rules/util-linux.mk`;
+2. adds exactly once:
+   - `--disable-makeinstall-chown`
+   - `--disable-use-tty-group`
+3. saves a unified patch and SHA-256 contract;
+4. runs DD-WRT's native `util-linux-configure` target;
+5. confirms the generated Makefile has no active `chgrp tty` or
+   `chown root:root` recipes;
+6. performs a focused staged `util-linux` install without `sudo`;
+7. requires staged files and absence of ownership-operation failures;
+8. only then resumes the native DD-WRT configure/rootfs path.
 
-## Verified Phase 50 result
-
-The native `ncurses-configure` target existed, completed successfully,
-and generated a verified `src/router/ncurses/Makefile`. DD-WRT built
-ncurses and advanced to `util-linux`, where `autoreconf` stopped at:
-
-```text
-Can't exec "gtkdocize": No such file or directory
-autoreconf: error: gtkdocize failed with exit status: 2
-make: *** [rules/util-linux.mk:8: util-linux-configure] Error 2
-```
-
-## Phase 51 correction
-
-- Preserves the pinned source revision, official DD-WRT toolchain,
-  exact RA72 ATH11K profile, native header tree, and revision metadata.
-- Preserves and revalidates the successful Phase 50 ncurses contract.
-- Installs Ubuntu's `gtk-doc-tools` package explicitly.
-- Verifies `/usr/bin/gtkdocize` before downloading the large toolchain.
-- Records the tool's package provider, version, SHA-256 hash, and
-  executable status.
-- Saves the exact native `src/router/rules/util-linux.mk`.
-- Requires and runs DD-WRT's native `util-linux-configure` target before
-  the full configure stage.
-- Requires a generated `src/router/util-linux/Makefile` before
-  continuing.
-- Saves focused preconfigure/config logs, final 500 lines, before/after
-  inventory, generated Makefile hash, and a machine-readable contract.
-- Classifies recurrence of the Phase 50 gtkdocize failure explicitly.
-- Keeps Qualcomm UBI and every flash/deployment path disabled.
-
-This is a narrow build correction. It does not claim that DD-WRT is
-ready to boot on RA72.
+The two options are supported by upstream `util-linux`; this is not a
+source-code workaround or a privileged install.
 
 ## Upload and run
 
 1. Upload this update over the existing `ddwrt-ra72-audit` repository.
-2. Keep `.github` and every folder path unchanged.
+2. Preserve all folder paths, including `.github`.
 3. Commit the changes.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 51: Add gtkdocize and preconfigure util-linux`
+   `Phase 52: Disable util-linux ownership hooks and build rootfs`
 
 6. Press **Run workflow**.
-7. Leave all three fields unchanged.
+7. Leave all three fields unchanged and run it.
 
-Download this artifact when the run stops:
+Download this artifact after the run stops:
 
-`ddwrt-ra72-phase51-gtkdocize-util-linux-rootfs-build`
+`ddwrt-ra72-phase52-util-linux-unprivileged-install-rootfs-build`
 
-Send back the complete downloaded artifact ZIP. The most useful files
-inside it are:
+Send back the complete downloaded artifact ZIP.
 
-- `REPORT-PHASE51.txt`
-- `review/phase51-status.txt`
-- `review/host-libltdl-contract.txt`
-- `review/ncurses-rule.mk`
-- `review/ncurses-before-preconfigure.txt`
-- `review/ncurses-after-preconfigure.txt`
-- `review/ncurses-preconfigure-contract.txt`
-- `review/ncurses-preconfigure-tail.txt`
-- `review/ncurses-preconfigure.log`
-- `review/host-gtkdocize-contract.txt`
-- `review/util-linux-rule.mk`
-- `review/util-linux-before-preconfigure.txt`
-- `review/util-linux-after-preconfigure.txt`
+## Most useful review files
+
+- `REPORT-PHASE52.txt`
+- `review/phase52-status.txt`
+- `review/util-linux-rule.original.mk`
+- `review/util-linux-rule.patched.mk`
+- `review/util-linux-unprivileged-install.patch`
+- `review/util-linux-unprivileged-install-patch-contract.txt`
 - `review/util-linux-preconfigure-contract.txt`
-- `review/util-linux-preconfigure-tail.txt`
 - `review/util-linux-preconfigure.log`
 - `review/util-linux-config.log` if present
-- `review/toolchain-download-contract.txt`
-- `review/toolchain-download-attempts.txt`
-- `review/toolchain-download-tail.txt`
-- `review/pcre-production-targets.txt`
-- `review/pcre-library-only.patch`
-- `review/pcre-built-libraries.txt`
-- `review/pcre-library-contract.txt`
-- `review/sodium-config-aux.patch`
-- `review/sodium-config-aux-patch-contract.txt`
-- `review/system-config-aux-sources.txt`
-- `review/libsodium-config-aux-contract.txt`
-- `review/libsodium-config-guess-output.txt`
-- `review/libsodium-config-sub-output.txt`
+- `review/util-linux-install-contract.txt`
+- `review/util-linux-install-test.log`
+- `review/util-linux-install-test-tail.txt`
+- `review/util-linux-install-test-files.txt`
 - `review/configure-failure-classification.txt`
 - `review/first-configure-errors.txt`
 - `review/ddwrt-configure-tail.txt`
-- `review/bootstrap-stage-status.txt`
-- `review/ddwrt-bootstrap-build-tail.txt`
-- `review/userspace-build-status.txt`
-- `review/build-failure-classification.txt`
-- `review/first-build-errors.txt`
-- `review/userspace-build-tail.txt`
-- `review/phase51-integration-checks.txt` if present
+- `review/phase52-integration-checks.txt` if produced
 
 ## Safety
 
-This workflow never contacts the router. It does not produce approved
-firmware. Any SquashFS rootfs is a review-only component and must not
-be booted or flashed.
+- No router, SSH, UART, NAND partition, or boot variable is accessed.
+- Qualcomm UBI and all flash/deployment paths remain disabled.
+- A generated SquashFS file is only a review component.
+- Do not boot, load, install, deploy, or flash any Phase 52 file.
