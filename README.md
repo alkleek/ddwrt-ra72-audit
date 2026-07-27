@@ -1,15 +1,19 @@
-# DD-WRT RA72 Phase 54
+# DD-WRT RA72 Phase 55
 
-Phase 54 corrects the exact failure found by Phase 53:
+Phase 55 corrects the exact failure found after Phase 54 passed its
+intended `nfnetlink_compat.h` repair:
 
 ```text
-../include/linux/netfilter/nfnetlink.h:4:10: fatal error:
-linux/netfilter/nfnetlink_compat.h: No such file or directory
-make: *** [rules/nftables.mk:19: libnftnl] Error 2
+cd powertop && aclocal
+cd powertop && autoconf
+configure.ac:52: error: possibly undefined macro: AC_MSG_ERROR
 ```
 
-Phase 53 itself passed its intended Meson correction. The isolated
-Meson `1.4.2` was active and satisfied GLib's minimum `1.4.0`.
+The apparent `AC_MSG_ERROR` failure is nested inside PowerTOP's
+`AX_PTHREAD` call. The current PowerTOP `configure.ac` also requires
+`AX_REQUIRE_DEFINED`, `AX_ADD_FORTIFY_SOURCE`, and
+`AX_CXX_COMPILE_STDCXX`. Those `AX_*` macros are supplied by the
+distribution's `autoconf-archive` package.
 
 This remains a review-only userspace/rootfs build. It does not create
 approved firmware and must not be flashed.
@@ -22,26 +26,29 @@ approved firmware and must not be flashed.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 54 correction
+## Phase 55 correction
 
 The workflow:
 
-1. exports the DD-WRT router and Linux 6.12 NSS trees from the same
-   pinned public SVN revision;
-2. requires the canonical UAPI source header:
-   `src/linux/universal/linux-6.12-nss/include/uapi/linux/netfilter/nfnetlink_compat.h`;
-3. materializes that header at the location used by DD-WRT userspace:
-   `src/router/kernel_headers/include/linux/netfilter/nfnetlink_compat.h`;
-4. verifies source and destination paths, revision, SHA-256 hashes,
-   byte identity, and include guard;
-5. records the complete result in
-   `review/nfnetlink-compat-header-contract.txt`;
-6. retains the Meson and all earlier corrections;
-7. continues the native DD-WRT RA72 userspace/rootfs build.
+1. installs Ubuntu's `autoconf-archive` package on the temporary GitHub
+   runner;
+2. verifies the package version and locates the provider file for every
+   required PowerTOP `AX_*` macro under `/usr/share/aclocal`;
+3. records paths and SHA-256 hashes in
+   `review/host-autoconf-archive-contract.txt`;
+4. exports `ACLOCAL_PATH=/usr/share/aclocal` for the complete DD-WRT
+   build;
+5. checks the exact macro references in the pinned PowerTOP
+   `configure.ac`;
+6. performs a focused `libtoolize`, `aclocal`, and `autoconf` preflight;
+7. requires the generated `aclocal.m4` to contain the `AX_PTHREAD`
+   definition and rejects the Phase 54 undefined-macro failure;
+8. records this in `review/powertop-autoconf-contract.txt`;
+9. retains the Phase 54 nfnetlink contract and all earlier corrections;
+10. continues the native DD-WRT RA72 userspace/rootfs build.
 
-The header is not downloaded from an unrelated project or kernel. It is
-copied from the Linux source exported at the exact DD-WRT revision used
-by the same run.
+If the package, any required macro, or the focused preflight is missing,
+the run stops before the long full configure stage.
 
 ## Upload and run
 
@@ -51,21 +58,26 @@ by the same run.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 54: Restore nfnetlink compat header and build rootfs`
+   `Phase 55: Provide PowerTOP Autoconf Archive macros and build rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged and run it.
 
 Download this artifact after the run stops:
 
-`ddwrt-ra72-phase54-nfnetlink-compat-header-rootfs-build`
+`ddwrt-ra72-phase55-powertop-autoconf-archive-rootfs-build`
 
 Send back the complete downloaded artifact ZIP.
 
 ## Most useful review files
 
-- `REPORT-PHASE54.txt`
-- `review/phase54-status.txt`
+- `REPORT-PHASE55.txt`
+- `review/phase55-status.txt`
+- `review/host-autoconf-archive-contract.txt`
+- `review/powertop-autoconf-contract.txt`
+- `review/powertop-autoconf-preflight.log`
+- `review/powertop-configure.ac`
+- `review/powertop-aclocal.m4`
 - `review/nfnetlink-compat-header-contract.txt`
 - `review/configure-failure-classification.txt`
 - `review/first-configure-errors.txt`
@@ -73,9 +85,9 @@ Send back the complete downloaded artifact ZIP.
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase54-integration-checks.txt` if produced
+- `review/phase55-integration-checks.txt` if produced
 
-The Phase 53 Meson contract and all earlier focused evidence remain
+The Phase 54 nfnetlink contract and all earlier focused evidence remain
 included in the artifact.
 
 ## Safety
@@ -83,4 +95,4 @@ included in the artifact.
 - No router, SSH, UART, NAND partition, or boot variable is accessed.
 - Qualcomm UBI and all flash/deployment paths remain disabled.
 - A generated SquashFS file is only a review component.
-- Do not boot, load, install, deploy, or flash any Phase 54 file.
+- Do not boot, load, install, deploy, or flash any Phase 55 file.
