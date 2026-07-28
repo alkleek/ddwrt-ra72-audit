@@ -1,24 +1,17 @@
-# DD-WRT RA72 Phase 57
+# DD-WRT RA72 Phase 58
 
-Phase 56 stopped safely before compilation because it expected a
-generated util-linux file at:
+Phase 57 successfully discovered the authoritative util-linux blkid
+template and applied the verified const-correctness patch. The build
+then reached e2fsprogs and exposed a separate deterministic mismatch:
 
 ```text
-src/router/util-linux/libblkid/src/blkid.h
+No rule to make target '../lib/libblkid.so', needed by 'e2fsck'.
 ```
 
-At this point in the pinned source export, the authoritative public
-header is still a source template such as `blkid.h.in`; the generated
-`blkid.h` does not exist until util-linux is configured. The legacy
-e2fsprogs `dev.c` is present, so the earlier compiler diagnosis remains
-valid, but Phase 56 could not verify its public-header side.
-
-Phase 57 removes the fragile single-file assumption. It searches only
-inside the pinned util-linux source for `blkid.h` and `blkid.h.in`,
-selects a candidate only when its exact `blkid_dev_set_search`
-prototype has both `const char *` parameters, records the candidate
-inventory and selected path, then applies the same narrow correction
-to the legacy e2fsprogs definition.
+The same log proves that the pinned private e2fsprogs build creates
+`libe2fsblkid.so`, not `libblkid.so`. Phase 58 therefore corrects the
+authoritative e2fsprogs configuration source so consumers request the
+private library name that the build actually produces.
 
 This remains a review-only userspace/rootfs build. It does not create
 approved firmware and must not be flashed.
@@ -31,30 +24,28 @@ approved firmware and must not be flashed.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 57 correction
+## Phase 58 correction
 
 The workflow:
 
-1. retains every earlier host-tool, PowerTOP, nfnetlink, wireless and
-   rootfs-build correction;
-2. inventories `blkid.h` and `blkid.h.in` candidates only under the
-   pinned util-linux tree;
-3. selects the authoritative source template deterministically when it
-   exposes the exact const-correct prototype;
-4. verifies that the selected public header exposes
-   `blkid_dev_set_search` with two `const char *` arguments;
-5. requires exactly one legacy e2fsprogs function definition for each
-   non-const search argument;
-6. changes only those two parameter tokens from `char *` to
-   `const char *`;
-7. records the candidate inventory, selected header, source revision,
-   before/after source, unified patch and machine-readable contract;
-8. rejects missing, ambiguous, partial, duplicate, or unexpected
-   matches;
-9. resumes the native DD-WRT RA72 userspace/rootfs build.
+1. retains every earlier verified correction, including the Phase 57
+   const-correct blkid function patch;
+2. scans only the top-level pinned e2fsprogs configuration sources
+   `configure`, `configure.ac` and `MCONFIG.in`;
+3. inventories exact private-library references before changing them;
+4. replaces only the `$(LIB)/libblkid` basename with
+   `$(LIB)/libe2fsblkid`, preserving the source's extension syntax;
+5. requires one or more exact references and rejects unrelated or
+   ambiguous source layouts;
+6. records the complete inventory, before/after files, unified patch,
+   hashes and a machine-readable contract;
+7. verifies after configuration that generated `MCONFIG` points to
+   `libe2fsblkid`, that the produced library exists, and that the
+   Phase 57 missing-target error is absent;
+8. resumes the native DD-WRT RA72 userspace/rootfs build.
 
-The run stops before the long configure stage if the pinned source no
-longer matches this narrow contract.
+No fallback symlink is created. If the pinned DD-WRT source changes,
+the workflow stops safely with review evidence.
 
 ## Upload and run
 
@@ -64,36 +55,34 @@ longer matches this narrow contract.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 57: Discover blkid header template and build rootfs`
+   `Phase 58: Repair e2fsprogs private blkid link and build rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged and run it.
 
 Download this artifact after the run stops:
 
-`ddwrt-ra72-phase57-blkid-header-discovery-rootfs-build`
+`ddwrt-ra72-phase58-e2fsprogs-private-blkid-link-rootfs-build`
 
 Send back the complete downloaded artifact ZIP.
 
 ## Most useful review files
 
-- `REPORT-PHASE57.txt`
-- `review/phase57-status.txt`
+- `REPORT-PHASE58.txt`
+- `review/phase58-status.txt`
+- `review/e2fsprogs-private-blkid-link-contract.txt`
+- `review/e2fsprogs-private-blkid-link.patch`
+- `review/e2fsprogs-private-blkid-link-candidates.txt`
+- `review/e2fsprogs-private-blkid-generated-contract.txt`
+- `review/e2fsprogs-private-blkid-built-files.txt`
 - `review/e2fsprogs-blkid-const-contract.txt`
-- `review/e2fsprogs-blkid-const-correctness.patch`
-- `review/e2fsprogs-blkid-dev.before.c`
-- `review/e2fsprogs-blkid-dev.after.c`
-- `review/util-linux-blkid-header-candidates.txt`
-- `review/util-linux-blkid-public-header.h`
-- `review/host-autoconf-archive-contract.txt`
-- `review/powertop-autoconf-contract.txt`
 - `review/configure-failure-classification.txt`
 - `review/first-configure-errors.txt`
 - `review/ddwrt-configure-tail.txt`
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase57-integration-checks.txt` if produced
+- `review/phase58-integration-checks.txt` if produced
 
 All earlier focused evidence remains included in the artifact.
 
@@ -102,4 +91,4 @@ All earlier focused evidence remains included in the artifact.
 - No router, SSH, UART, NAND partition, or boot variable is accessed.
 - Qualcomm UBI and all flash/deployment paths remain disabled.
 - A generated SquashFS file is only a review component.
-- Do not boot, load, install, deploy, or flash any Phase 57 file.
+- Do not boot, load, install, deploy, or flash any Phase 58 file.
