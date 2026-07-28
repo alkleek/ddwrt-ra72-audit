@@ -1,18 +1,15 @@
-# DD-WRT RA72 Phase 62
+# DD-WRT RA72 Phase 63
 
-Phase 61 successfully repaired the private e2fsprogs blkid/UUID link contract.
-The generated `MCONFIG`, `libe2fsblkid`, `libuuid`, and final link order all
-passed. The next failure is later, while configuring btrfsprogs:
+Phase 62 successfully staged the generated util-linux `blkid.pc` and
+`uuid.pc`, resolved `pkg-config --static --libs blkid`, and linked the
+AArch64 uClibc blkid test program. It stopped only because the local Phase 62
+diagnostic incorrectly required `-luuid` in blkid's static flags.
 
-```text
-configure: error: pkg-config description of blkid, needed for static build, is not available
-```
-
-The focused util-linux install already produced the correct target libraries,
-headers, `blkid.pc`, and `uuid.pc`. Phase 62 exposes that verified metadata to
-the native DD-WRT configure stage through a dedicated build-only
-`PKG_CONFIG_PATH`, proves the static dependency closure, and resumes the
-review-only rootfs build.
+The generated DD-WRT metadata does not declare UUID as a private dependency of
+blkid, and the verified link succeeds without it. Phase 63 therefore preserves
+the generated package contract instead of inventing an extra dependency. It
+verifies that the resolved flags match exactly what the generated `blkid.pc`
+declares, then resumes the review-only rootfs build.
 
 This phase does not produce approved firmware and must not be flashed.
 
@@ -24,7 +21,7 @@ This phase does not produce approved firmware and must not be flashed.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 62 correction
+## Phase 63 correction
 
 The workflow:
 
@@ -37,17 +34,18 @@ The workflow:
    - `usr/tmp/pkgconfig/uuid.pc`
    - `usr/tmp/libblkid.a`
    - `usr/tmp/libuuid.a`
-4. copies only the two generated `.pc` files into an isolated Phase 62
+4. copies only the two generated `.pc` files into an isolated Phase 63
    pkg-config directory;
 5. rewrites their install prefixes to absolute paths inside the temporary
    staged util-linux tree without changing their package fields or
    dependencies;
 6. prepends that isolated directory to `PKG_CONFIG_PATH`;
-7. requires `pkg-config --static --libs blkid` to include both `-lblkid` and
-   `-luuid` and the staged target library path;
+7. requires `pkg-config --static --libs blkid` to include `-lblkid`, use the
+   staged target library path, and include or omit `-luuid` exactly as declared
+   by the generated source metadata;
 8. cross-links a small AArch64 uClibc blkid program before starting the long
    native DD-WRT configure stage;
-9. proves the Phase 61 btrfsprogs static-description error is absent before
+9. proves the earlier btrfsprogs static-description error is absent before
    accepting any later blocker or rootfs result.
 
 No router is accessed. No bootloader, NAND partition, UBI volume, or boot
@@ -62,21 +60,21 @@ variable is changed.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 62: Stage static blkid pkg-config and build rootfs`
+   `Phase 63: Accept verified blkid pkg-config and build rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged and start the run.
 
 After the run stops, download:
 
-`ddwrt-ra72-phase62-btrfs-static-blkid-pkgconfig-rootfs-build`
+`ddwrt-ra72-phase63-verified-blkid-pkgconfig-rootfs-build`
 
 Send back the complete downloaded artifact ZIP.
 
 ## Most useful review files
 
-- `REPORT-PHASE62.txt`
-- `review/phase62-status.txt`
+- `REPORT-PHASE63.txt`
+- `review/phase63-status.txt`
 - `review/btrfs-blkid.pc.original`
 - `review/btrfs-uuid.pc.original`
 - `review/btrfs-blkid.pc.rewritten`
@@ -93,7 +91,7 @@ Send back the complete downloaded artifact ZIP.
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase62-integration-checks.txt` if produced
+- `review/phase63-integration-checks.txt` if produced
 
 All earlier focused evidence remains included in the artifact.
 
@@ -102,4 +100,4 @@ All earlier focused evidence remains included in the artifact.
 - No router, SSH, UART, NAND partition, or boot variable is accessed.
 - Qualcomm UBI and all flash/deployment paths remain disabled.
 - A generated SquashFS file, if any, is only a review component.
-- Do not boot, load, install, deploy, or flash any Phase 62 file.
+- Do not boot, load, install, deploy, or flash any Phase 63 file.
