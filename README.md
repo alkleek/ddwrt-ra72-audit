@@ -1,24 +1,18 @@
-# DD-WRT RA72 Phase 61
+# DD-WRT RA72 Phase 62
 
-Phase 59 completed its intended generated-`configure` synchronization and
-proved that the private `libe2fsblkid.so` is built. The build then exposed a
-new, exact linker defect in the generated e2fsprogs `MCONFIG`:
+Phase 61 successfully repaired the private e2fsprogs blkid/UUID link contract.
+The generated `MCONFIG`, `libe2fsblkid`, `libuuid`, and final link order all
+passed. The next failure is later, while configuring btrfsprogs:
 
 ```text
-LIBBLKID = $(LIB)/libe2fsblkid.so # $(LIBUUID)
+configure: error: pkg-config description of blkid, needed for static build, is not available
 ```
 
-The comment marker prevents `-luuid` from reaching the blkid link command.
-The resulting failure reports `libuuid.so.0` as missing and leaves
-`uuid_unparse` and `uuid_is_null` undefined.
-
-Phase 60 stopped safely before building because it expected the comment marker
-to be literal text in `MCONFIG.in`. The pinned source instead uses the upstream
-template token `@PRIVATE_LIBS_CMT@`, which becomes `#` only when `configure`
-generates `MCONFIG`.
-
-Phase 61 removes that guard from the `LIBBLKID` line only, proves the generated
-link order, and resumes the review-only userspace/rootfs build.
+The focused util-linux install already produced the correct target libraries,
+headers, `blkid.pc`, and `uuid.pc`. Phase 62 exposes that verified metadata to
+the native DD-WRT configure stage through a dedicated build-only
+`PKG_CONFIG_PATH`, proves the static dependency closure, and resumes the
+review-only rootfs build.
 
 This phase does not produce approved firmware and must not be flashed.
 
@@ -30,43 +24,34 @@ This phase does not produce approved firmware and must not be flashed.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 61 correction
+## Phase 62 correction
 
 The workflow:
 
-1. pins the public DD-WRT source at revision `65793` and retains all earlier
-   verified corrections;
-2. re-verifies the exact Phase 58/59 generated-`configure` synchronization;
-3. requires exactly one `LIBBLKID` UUID dependency guarded by
-   `@PRIVATE_LIBS_CMT@` and no active equivalent in
-   `src/router/e2fsprogs/MCONFIG.in`;
-4. changes only:
+1. pins public DD-WRT source revision `65793` and retains all earlier verified
+   corrections;
+2. completes the focused util-linux cross-build and unprivileged staged
+   install;
+3. requires the staged target files:
+   - `usr/tmp/pkgconfig/blkid.pc`
+   - `usr/tmp/pkgconfig/uuid.pc`
+   - `usr/tmp/libblkid.a`
+   - `usr/tmp/libuuid.a`
+4. copies only the two generated `.pc` files into an isolated Phase 62
+   pkg-config directory;
+5. rewrites their install prefixes to absolute paths inside the temporary
+   staged util-linux tree without changing their package fields or
+   dependencies;
+6. prepends that isolated directory to `PKG_CONFIG_PATH`;
+7. requires `pkg-config --static --libs blkid` to include both `-lblkid` and
+   `-luuid` and the staged target library path;
+8. cross-links a small AArch64 uClibc blkid program before starting the long
+   native DD-WRT configure stage;
+9. proves the Phase 61 btrfsprogs static-description error is absent before
+   accepting any later blocker or rootfs result.
 
-   ```text
-   LIBBLKID = @LIBBLKID@ @PRIVATE_LIBS_CMT@ $(LIBUUID)
-   ```
-
-   to:
-
-   ```text
-   LIBBLKID = @LIBBLKID@ $(LIBUUID)
-   ```
-
-5. verifies that every unrelated `@PRIVATE_LIBS_CMT@` token remains unchanged,
-   then records before/after copies, SHA-256 values, a unified patch and a
-   machine-readable contract;
-6. proves that `configure` and `configure.ac` were not changed by this new
-   correction;
-7. verifies that util-linux produced `libuuid.so`;
-8. verifies that generated `MCONFIG` requests private `libe2fsblkid` followed
-   by `$(LIBUUID)`, where `LIBUUID = -luuid`;
-9. verifies the actual blkid link command orders `libe2fsblkid.so` before
-   `-luuid`;
-10. proves that the Phase 59 missing-library warning and UUID undefined
-    references are absent before accepting later build results.
-
-No Autoconf regeneration and no fallback symlink are used. Any source layout
-other than the exact verified pinned template state stops safely.
+No router is accessed. No bootloader, NAND partition, UBI volume, or boot
+variable is changed.
 
 ## Upload and run
 
@@ -77,36 +62,38 @@ other than the exact verified pinned template state stops safely.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 61: Repair e2fsprogs private blkid UUID template and build rootfs`
+   `Phase 62: Stage static blkid pkg-config and build rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged and start the run.
 
 After the run stops, download:
 
-`ddwrt-ra72-phase61-e2fsprogs-private-blkid-uuid-template-rootfs-build`
+`ddwrt-ra72-phase62-btrfs-static-blkid-pkgconfig-rootfs-build`
 
 Send back the complete downloaded artifact ZIP.
 
 ## Most useful review files
 
-- `REPORT-PHASE61.txt`
-- `review/phase61-status.txt`
-- `review/e2fsprogs-private-blkid-uuid-template-contract.txt`
-- `review/e2fsprogs-private-blkid-uuid-template.patch`
-- `review/e2fsprogs-MCONFIG.in.before`
-- `review/e2fsprogs-MCONFIG.in.after`
-- `review/e2fsprogs-private-blkid-generated-contract.txt`
-- `review/e2fsprogs-private-blkid-built-files.txt`
-- `review/e2fsprogs-private-blkid-uuid-built-files.txt`
-- `review/e2fsprogs-generated-MCONFIG.txt`
+- `REPORT-PHASE62.txt`
+- `review/phase62-status.txt`
+- `review/btrfs-blkid.pc.original`
+- `review/btrfs-uuid.pc.original`
+- `review/btrfs-blkid.pc.rewritten`
+- `review/btrfs-uuid.pc.rewritten`
+- `review/btrfs-blkid-pkgconfig-rewrite-contract.txt`
+- `review/btrfs-blkid-pkgconfig-query.txt`
+- `review/btrfs-blkid-pkgconfig-contract.txt`
+- `review/btrfs-blkid-static-link.log`
+- `review/btrfs-blkid-static-link-file.txt`
+- `review/btrfs-blkid-configure-contract.txt`
 - `review/configure-failure-classification.txt`
 - `review/first-configure-errors.txt`
 - `review/ddwrt-configure-tail.txt`
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase61-integration-checks.txt` if produced
+- `review/phase62-integration-checks.txt` if produced
 
 All earlier focused evidence remains included in the artifact.
 
@@ -115,4 +102,4 @@ All earlier focused evidence remains included in the artifact.
 - No router, SSH, UART, NAND partition, or boot variable is accessed.
 - Qualcomm UBI and all flash/deployment paths remain disabled.
 - A generated SquashFS file, if any, is only a review component.
-- Do not boot, load, install, deploy, or flash any Phase 61 file.
+- Do not boot, load, install, deploy, or flash any Phase 62 file.
