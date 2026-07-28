@@ -1,14 +1,17 @@
-# DD-WRT RA72 Phase 64
+# DD-WRT RA72 Phase 65
 
-Phase 63 proved that the staged util-linux `blkid.pc` and `uuid.pc` contract
-is valid. The AArch64 uClibc link test passed, and the native DD-WRT configure
-stage detected blkid. The first real later blocker was:
+Phase 64 successfully resolved the staged `blkid`, `uuid`, and `libudev`
+pkg-config contracts. The native DD-WRT configure stage detected both blkid
+and libudev, then progressed to a new first fatal blocker in `libmcrypt`:
 
-`Package 'libudev', required by 'virtual:world', not found`
+```text
+Invalid configuration `aarch64-linux': machine `aarch64' not recognized
+configure: error: /bin/bash ./config.sub aarch64-linux failed
+```
 
-Phase 64 supplies only the missing pkg-config description for DD-WRT's own
-in-tree libudev and resumes the review-only userspace/rootfs build. It does
-not replace libudev, import OpenWrt code, or build approved firmware.
+Phase 65 replaces only the obsolete Autotools target-recognition helpers
+inside DD-WRT's existing `libmcrypt` source tree, verifies the two AArch64
+tuples used by this build, and resumes the review-only userspace/rootfs build.
 
 ## Exact device
 
@@ -18,27 +21,26 @@ not replace libudev, import OpenWrt code, or build approved firmware.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 64 correction
+## Phase 65 correction
 
 The workflow:
 
-1. pins public DD-WRT source revision `65793` and retains all earlier verified
-   corrections;
-2. repeats the focused util-linux build and verifies the staged blkid/uuid
-   metadata and AArch64 uClibc link proof;
-3. locates DD-WRT's own in-tree `libudev.h`;
-4. creates an isolated `libudev.pc` whose include and library paths point only
-   to that same DD-WRT source tree;
-5. verifies `pkg-config --exists blkid uuid libudev`, plus the exact libudev
-   include path, library path and `-ludev` flag;
-6. accepts the generated e2fsprogs MCONFIG only when it matches either the
-   verified private-library layout or the actual external util-linux
-   blkid/uuid layout;
-7. requires btrfsprogs configure to detect both blkid and libudev before
-   classifying any later blocker.
+1. pins public DD-WRT source revision `65793` and retains every earlier
+   verified correction;
+2. locates Ubuntu's maintained `config.guess` and `config.sub`;
+3. records the original `libmcrypt` helpers and their pre-correction result;
+4. installs byte-identical, executable host copies into
+   `src/router/libmcrypt`;
+5. verifies both `config.sub aarch64-linux` and
+   `config.sub aarch64-uclibc-linux` return successfully;
+6. verifies the replacement `config.guess` executes successfully;
+7. records hashes, helper output, and a machine-readable contract before the
+   long DD-WRT configure/build stage begins;
+8. classifies any recurrence as
+   `LIBMCRYPT_CONFIG_SUB_AARCH64_UNSUPPORTED`.
 
-No router is accessed. No bootloader, NAND partition, UBI volume, boot
-variable, DTB, wireless profile, or image recipe is changed.
+This does not replace or upgrade libmcrypt itself. It does not import OpenWrt
+code and does not build approved firmware.
 
 ## Upload and run
 
@@ -49,35 +51,34 @@ variable, DTB, wireless profile, or image recipe is changed.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 64: Stage libudev pkg-config and build rootfs`
+   `Phase 65: Refresh libmcrypt config helpers and build rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged and start the run.
 
 After the run stops, download:
 
-`ddwrt-ra72-phase64-libudev-pkgconfig-rootfs-build`
+`ddwrt-ra72-phase65-libmcrypt-config-aux-rootfs-build`
 
 Send back the complete downloaded artifact ZIP.
 
 ## Most useful review files
 
-- `REPORT-PHASE64.txt`
-- `review/phase64-status.txt`
-- `review/btrfs-libudev.pc.staged`
-- `review/btrfs-libudev-pkgconfig-generation-contract.txt`
-- `review/btrfs-libudev-pkgconfig-contract.txt`
-- `review/btrfs-blkid-pkgconfig-query.txt`
-- `review/btrfs-blkid-pkgconfig-contract.txt`
-- `review/btrfs-blkid-configure-contract.txt`
-- `review/e2fsprogs-private-blkid-generated-contract.txt`
+- `REPORT-PHASE65.txt`
+- `review/phase65-status.txt`
+- `review/libmcrypt-config-aux-contract.txt`
+- `review/libmcrypt-config-aux-inventory.txt`
+- `review/libmcrypt-config-sub-aarch64.before.txt`
+- `review/libmcrypt-config-sub-aarch64.after.txt`
+- `review/libmcrypt-config-sub-uclibc.after.txt`
+- `review/libmcrypt-config-guess.after.txt`
 - `review/configure-failure-classification.txt`
 - `review/first-configure-errors.txt`
 - `review/ddwrt-configure-tail.txt`
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase64-integration-checks.txt` if produced
+- `review/phase65-integration-checks.txt` if produced
 
 All earlier focused evidence remains included in the artifact.
 
@@ -86,4 +87,4 @@ All earlier focused evidence remains included in the artifact.
 - No router, SSH, UART, NAND partition, or boot variable is accessed.
 - Qualcomm UBI and all flash/deployment paths remain disabled.
 - A generated SquashFS file, if any, is only a review component.
-- Do not boot, load, install, deploy, or flash any Phase 64 file.
+- Do not boot, load, install, deploy, or flash any Phase 65 file.
