@@ -1,20 +1,23 @@
-# DD-WRT RA72 Phase 69
+# DD-WRT RA72 Phase 70
 
-Phase 68 proved that curl now consumes the target OpenSSL3 include and
-library paths without leaking the GitHub runner's host OpenSSL `pkg-config`
-metadata. The build continued into `libtalloc`, where its Waf configure
-selected Python 3.12 from the isolated Meson virtual environment and stopped:
+Phase 69 proved that the pinned `setuptools` compatibility provider works
+inside the exact Python 3.12 virtual environment selected by `libtalloc`.
+All direct `distutils` checks passed and the Phase 68 `libtalloc` failure
+disappeared. The build then continued to the bundled `libusb` configure used
+by `usb_modeswitch`, where it stopped because its restricted DD-WRT header
+path did not contain the Linux netlink UAPI header:
 
 ```text
-Checking for program 'python3' : .../host-meson-venv/bin/python3
-The distutils module is unusable: install "python-devel"?
+checking for linux/netlink.h... no
+configure: error: Linux netlink header not found
 ```
 
-Python 3.12 removed `distutils` from the standard library. Phase 69 keeps every
-earlier verified correction and adds a pinned compatibility provider inside
-the exact virtual environment selected by `libtalloc`. It does not claim that
-the userspace/rootfs build will finish; it continues until the next verified
-failure and records that evidence.
+Phase 70 keeps every earlier verified correction and materializes the exact
+`linux/netlink.h` file from DD-WRT's pinned Linux 6.12 NSS source tree into
+the userspace kernel-header tree consumed by that configure step. It validates
+the copied header with the AArch64 uClibc cross compiler before continuing.
+It does not claim that the userspace/rootfs build will finish; it records the
+next verified result.
 
 ## Exact device
 
@@ -24,26 +27,27 @@ failure and records that evidence.
 
 This is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Narrow Phase 69 correction
+## Narrow Phase 70 correction
 
 The workflow:
 
 1. pins public DD-WRT source revision `65793`;
-2. retains the verified curl target-OpenSSL3 isolation from Phase 68;
-3. retains isolated Meson `1.4.2` in its Python virtual environment;
-4. installs pinned `setuptools 70.3.0` into that same environment;
-5. exports `SETUPTOOLS_USE_DISTUTILS=local`;
-6. directly imports `distutils`, `distutils.core`, and
-   `distutils.sysconfig` before DD-WRT configure starts;
-7. verifies that the provider comes from the virtual environment's
-   `setuptools/_distutils` tree;
-8. repeats the import check after the cross-toolchain path is active;
-9. captures the `libtalloc` rule, Waf config log, complete DD-WRT configure
-   log, and exact next-failure classification;
-10. fails closed if any compatibility contract is not satisfied.
+2. retains the verified Phase 69 Python/distutils compatibility contract;
+3. takes `include/uapi/linux/netlink.h` only from the pinned DD-WRT Linux
+   `linux-6.12-nss` tree;
+4. stages it at `src/router/kernel_headers/include/linux/netlink.h`, the
+   exact userspace include tree passed to bundled `libusb`;
+5. verifies source and destination hashes and byte-for-byte identity;
+6. compiles a focused `linux/netlink.h` preflight with DD-WRT's official
+   AArch64 uClibc compiler and the same include path;
+7. verifies that the `usb_modeswitch/libusb` configure segment detects the
+   header and that the Phase 69 missing-header failure is absent;
+8. captures the complete DD-WRT configure/build logs and classifies the
+   first next failure;
+9. fails closed if the new header contract is not satisfied.
 
-This is deliberately narrower than changing the GitHub runner's global
-Python installation or patching `libtalloc` to skip its own checks.
+This is deliberately narrower than using the GitHub runner's host kernel
+headers or patching bundled `libusb` to skip its netlink check.
 
 ## Upload and run
 
@@ -54,21 +58,25 @@ Python installation or patching `libtalloc` to skip its own checks.
 5. Open **Actions**.
 6. Select:
 
-   `Phase 69: Provide libtalloc Python distutils and build rootfs`
+   `Phase 70: Stage Linux netlink UAPI and build rootfs`
 
 7. Press **Run workflow**.
 8. Leave all fields unchanged and start the run.
 
 After the run stops, download this complete artifact:
 
-`ddwrt-ra72-phase69-libtalloc-python-distutils-rootfs-build`
+`ddwrt-ra72-phase70-linux-netlink-uapi-rootfs-build`
 
 Send back the downloaded artifact ZIP without removing any files.
 
 ## Most useful review files
 
-- `REPORT-PHASE69.txt`
-- `review/phase69-status.txt`
+- `REPORT-PHASE70.txt`
+- `review/phase70-status.txt`
+- `review/linux-netlink-uapi-header-contract.txt`
+- `review/linux-netlink-uapi-preflight.log`
+- `review/linux-netlink-uapi-preflight-tail.txt`
+- `review/usb-modeswitch-libusb-configure-segment.txt`
 - `review/host-setuptools-distutils-contract.txt`
 - `review/host-setuptools-install.log`
 - `review/host-setuptools-install-tail.txt`
@@ -83,11 +91,11 @@ Send back the downloaded artifact ZIP without removing any files.
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase69-integration-checks.txt` if produced
+- `review/phase70-integration-checks.txt` if produced
 
 ## Safety
 
 - No router, SSH, UART, NAND partition, or boot variable is accessed.
 - No approved firmware, UBI image, or Xiaomi installation image is built.
 - A generated SquashFS file, if any, remains a review-only component.
-- Do not boot, load, install, deploy, or flash any Phase 69 file.
+- Do not boot, load, install, deploy, or flash any Phase 70 file.
