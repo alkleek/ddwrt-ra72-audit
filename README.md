@@ -1,17 +1,19 @@
-# DD-WRT RA72 Phase 65
+# DD-WRT RA72 Phase 66
 
-Phase 64 successfully resolved the staged `blkid`, `uuid`, and `libudev`
-pkg-config contracts. The native DD-WRT configure stage detected both blkid
-and libudev, then progressed to a new first fatal blocker in `libmcrypt`:
+Phase 65 successfully refreshed the obsolete `libmcrypt` Autotools helpers.
+Both AArch64 target tuples passed, `libmcrypt` configured, and the build moved
+to the next exact blocker. DD-WRT configured `openssl3` successfully, but the
+active curl rule later invoked the obsolete directory:
 
 ```text
-Invalid configuration `aarch64-linux': machine `aarch64' not recognized
-configure: error: /bin/bash ./config.sub aarch64-linux failed
+make -j 8 -C openssl
+make[1]: *** No targets specified and no makefile found. Stop.
+make: *** [rules/curl.mk:30: curl-configure] Error 2
 ```
 
-Phase 65 replaces only the obsolete Autotools target-recognition helpers
-inside DD-WRT's existing `libmcrypt` source tree, verifies the two AArch64
-tuples used by this build, and resumes the review-only userspace/rootfs build.
+Phase 66 changes only that verified curl dependency from `openssl` to
+`openssl3`, records the one-line diff and rule contract, then resumes the
+review-only userspace/rootfs build.
 
 ## Exact device
 
@@ -21,25 +23,24 @@ tuples used by this build, and resumes the review-only userspace/rootfs build.
 
 It is not for Xiaomi Mi Router AX6000 (IPQ8072A) or Redmi AX6000.
 
-## Phase 65 correction
+## Phase 66 correction
 
 The workflow:
 
 1. pins public DD-WRT source revision `65793` and retains every earlier
    verified correction;
-2. locates Ubuntu's maintained `config.guess` and `config.sub`;
-3. records the original `libmcrypt` helpers and their pre-correction result;
-4. installs byte-identical, executable host copies into
-   `src/router/libmcrypt`;
-5. verifies both `config.sub aarch64-linux` and
-   `config.sub aarch64-uclibc-linux` return successfully;
-6. verifies the replacement `config.guess` executes successfully;
-7. records hashes, helper output, and a machine-readable contract before the
-   long DD-WRT configure/build stage begins;
+2. retains and verifies the Phase 65 `libmcrypt` correction;
+3. requires the native `src/router/openssl3` source and `rules/curl.mk`;
+4. records the original curl rule and its SHA-256 hash;
+5. replaces exactly one recipe dependency from `-C openssl` to
+   `-C openssl3`;
+6. fails closed if the verified one-line shape is absent or ambiguous;
+7. records the patched rule, unified diff, hashes, reference counts, and a
+   machine-readable contract;
 8. classifies any recurrence as
-   `LIBMCRYPT_CONFIG_SUB_AARCH64_UNSUPPORTED`.
+   `CURL_LEGACY_OPENSSL_MAKEFILE_MISSING`.
 
-This does not replace or upgrade libmcrypt itself. It does not import OpenWrt
+This does not replace or upgrade OpenSSL or curl. It does not import OpenWrt
 code and does not build approved firmware.
 
 ## Upload and run
@@ -51,34 +52,35 @@ code and does not build approved firmware.
 4. Open **Actions**.
 5. Select:
 
-   `Phase 65: Refresh libmcrypt config helpers and build rootfs`
+   `Phase 66: Repair curl OpenSSL3 dependency and build rootfs`
 
 6. Press **Run workflow**.
 7. Leave all three fields unchanged and start the run.
 
 After the run stops, download:
 
-`ddwrt-ra72-phase65-libmcrypt-config-aux-rootfs-build`
+`ddwrt-ra72-phase66-curl-openssl3-rootfs-build`
 
 Send back the complete downloaded artifact ZIP.
 
 ## Most useful review files
 
-- `REPORT-PHASE65.txt`
-- `review/phase65-status.txt`
+- `REPORT-PHASE66.txt`
+- `review/phase66-status.txt`
+- `review/curl-openssl3-rule-contract.txt`
+- `review/curl-rule.mk.before`
+- `review/curl-rule.mk.after`
+- `review/curl-openssl3-rule.patch`
+- `review/curl-openssl-references.before.txt`
+- `review/curl-openssl-references.after.txt`
 - `review/libmcrypt-config-aux-contract.txt`
-- `review/libmcrypt-config-aux-inventory.txt`
-- `review/libmcrypt-config-sub-aarch64.before.txt`
-- `review/libmcrypt-config-sub-aarch64.after.txt`
-- `review/libmcrypt-config-sub-uclibc.after.txt`
-- `review/libmcrypt-config-guess.after.txt`
 - `review/configure-failure-classification.txt`
 - `review/first-configure-errors.txt`
 - `review/ddwrt-configure-tail.txt`
 - `review/build-failure-classification.txt`
 - `review/first-build-errors.txt`
 - `review/userspace-build-tail.txt`
-- `review/phase65-integration-checks.txt` if produced
+- `review/phase66-integration-checks.txt` if produced
 
 All earlier focused evidence remains included in the artifact.
 
@@ -87,4 +89,4 @@ All earlier focused evidence remains included in the artifact.
 - No router, SSH, UART, NAND partition, or boot variable is accessed.
 - Qualcomm UBI and all flash/deployment paths remain disabled.
 - A generated SquashFS file, if any, is only a review component.
-- Do not boot, load, install, deploy, or flash any Phase 65 file.
+- Do not boot, load, install, deploy, or flash any Phase 66 file.
